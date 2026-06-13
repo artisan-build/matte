@@ -4,8 +4,121 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3991bdb4ee847b0dc338a93492835b4e",
+    "content-hash": "76f61f83e05816e8845e3a8f2f0ec0ea",
     "packages": [
+        {
+            "name": "artisan-build/matte-contracts",
+            "version": "0.1.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/matte-contracts",
+                "reference": "fd049ec0dacef2cfff07be5abb227319e1f18de3"
+            },
+            "require": {
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.27",
+                "pestphp/pest": "^4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ArtisanBuild\\MatteContracts\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "ArtisanBuild\\MatteContracts\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "pest"
+                ],
+                "lint": [
+                    "pint"
+                ],
+                "lint:test": [
+                    "pint --test"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "The versioned contracts shared between matte-client and matte-server.",
+            "keywords": [
+                "contracts",
+                "laravel",
+                "matte"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "artisan-build/matte-server",
+            "version": "0.1.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/matte-server",
+                "reference": "9d16e0cace0ae29b566505d81e3d6d97584b0e30"
+            },
+            "require": {
+                "artisan-build/matte-contracts": "^0.1",
+                "illuminate/contracts": "^13.0",
+                "illuminate/support": "^13.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.27",
+                "orchestra/testbench": "^11.0",
+                "pestphp/pest": "^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ArtisanBuild\\MatteServer\\MatteServerServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ArtisanBuild\\MatteServer\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "ArtisanBuild\\MatteServer\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "pest"
+                ],
+                "lint": [
+                    "pint"
+                ],
+                "lint:test": [
+                    "pint --test"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "The server-side Matte package consumed by the Matte app.",
+            "keywords": [
+                "laravel",
+                "matte",
+                "mcp"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
         {
             "name": "bacon/bacon-qr-code",
             "version": "v3.1.1",
@@ -7575,6 +7688,156 @@
     ],
     "packages-dev": [
         {
+            "name": "artisan-build/gh",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/artisan-build/gh.git",
+                "reference": "b7e4330a32bfd595661abe70e70fae63dc9f1330"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/artisan-build/gh/zipball/b7e4330a32bfd595661abe70e70fae63dc9f1330",
+                "reference": "b7e4330a32bfd595661abe70e70fae63dc9f1330",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^11.9|^12.0|^13.0"
+            },
+            "require-dev": {
+                "larastan/larastan": "^v3.0.2",
+                "laravel/pint": "^1.19.0",
+                "orchestra/testbench": "^v9.9.0",
+                "pestphp/pest": "^v3.7.1",
+                "phpstan/phpstan": "^2.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ArtisanBuild\\GH\\Providers\\GHServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ArtisanBuild\\GH\\": "src/",
+                    "ArtisanBuild\\GH\\Tests\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "support": {
+                "source": "https://github.com/artisan-build/gh/tree/1.0.0"
+            },
+            "time": "2026-03-19T08:41:31+00:00"
+        },
+        {
+            "name": "artisan-build/kibble",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/artisan-build/kibble.git",
+                "reference": "62eb3f7887699980d9070e094da62149de63cc3f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/artisan-build/kibble/zipball/62eb3f7887699980d9070e094da62149de63cc3f",
+                "reference": "62eb3f7887699980d9070e094da62149de63cc3f",
+                "shasum": ""
+            },
+            "require": {
+                "artisan-build/gh": "*",
+                "artisan-build/packagist": "*",
+                "illuminate/filesystem": "^11.9|^12.0|^13.0",
+                "illuminate/process": "^11.9|^12.0|^13.0",
+                "illuminate/support": "^11.9|^12.0|^13.0",
+                "laravel/prompts": "*"
+            },
+            "require-dev": {
+                "larastan/larastan": "^v3.0.2",
+                "laravel/pint": "^1.19.0",
+                "orchestra/testbench": "^v9.9.0",
+                "pestphp/pest": "^v3.7.1",
+                "phpstan/phpstan": "^2.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ArtisanBuild\\Kibble\\Providers\\KibbleServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ArtisanBuild\\Kibble\\": "src/",
+                    "ArtisanBuild\\Kibble\\Tests\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP package creation and management tools",
+            "support": {
+                "issues": "https://github.com/artisan-build/kibble/issues",
+                "source": "https://github.com/artisan-build/kibble/tree/v1.2.0"
+            },
+            "time": "2026-06-11T08:47:51+00:00"
+        },
+        {
+            "name": "artisan-build/packagist",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/artisan-build/packagist.git",
+                "reference": "5562b98f01d78a7e8837bb4ac401ff3f2d3262ad"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/artisan-build/packagist/zipball/5562b98f01d78a7e8837bb4ac401ff3f2d3262ad",
+                "reference": "5562b98f01d78a7e8837bb4ac401ff3f2d3262ad",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^11.36|^12.0|^13.0",
+                "saloonphp/saloon": "^4.0"
+            },
+            "require-dev": {
+                "larastan/larastan": "^v3.0.2",
+                "laravel/pint": "^1.19.0",
+                "orchestra/testbench": "^v9.9.0",
+                "pestphp/pest": "^v3.7.1",
+                "phpstan/phpstan": "^2.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ArtisanBuild\\Packagist\\Providers\\PackagistServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ArtisanBuild\\Packagist\\": "src/",
+                    "ArtisanBuild\\Packagist\\Tests\\": "tests/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel wrapper for the Packagist API",
+            "support": {
+                "source": "https://github.com/artisan-build/packagist/tree/v1.0.0"
+            },
+            "time": "2026-03-27T13:14:01+00:00"
+        },
+        {
             "name": "barryvdh/laravel-ide-helper",
             "version": "v3.7.0",
             "source": {
@@ -10437,6 +10700,87 @@
                 }
             ],
             "time": "2026-05-26T21:03:22+00:00"
+        },
+        {
+            "name": "saloonphp/saloon",
+            "version": "v4.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/saloonphp/saloon.git",
+                "reference": "1307b1d72cacdd2c9c20978cdf7a0b720b4bf3bb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/saloonphp/saloon/zipball/1307b1d72cacdd2c9c20978cdf7a0b720b4bf3bb",
+                "reference": "1307b1d72cacdd2c9c20978cdf7a0b720b4bf3bb",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.6",
+                "guzzlehttp/promises": "^1.5 || ^2.0",
+                "guzzlehttp/psr7": "^2.0",
+                "php": "^8.2",
+                "psr/http-factory": "^1.0",
+                "psr/http-message": "^1.1 || ^2.0"
+            },
+            "conflict": {
+                "sammyjo20/saloon": "*"
+            },
+            "require-dev": {
+                "ext-simplexml": "*",
+                "friendsofphp/php-cs-fixer": "^3.5",
+                "illuminate/collections": "^10.0 || ^11.0 || ^12.0",
+                "league/flysystem": "^3.0",
+                "pestphp/pest": "^2.36.0 || ^3.8.2 || ^4.1.4",
+                "phpstan/phpstan": "^2.1.13",
+                "saloonphp/xml-wrangler": "^1.1",
+                "spatie/invade": "^2.1",
+                "symfony/dom-crawler": "^6.0 || ^7.0",
+                "symfony/var-dumper": "^6.3 || ^7.0"
+            },
+            "suggest": {
+                "illuminate/collections": "Required for the response collect() method.",
+                "saloonphp/xml-wrangler": "Required for the response xmlReader() method.",
+                "symfony/dom-crawler": "Required for the response dom() method.",
+                "symfony/var-dumper": "Required for default debugging drivers."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Saloon\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sam Carré",
+                    "email": "29132017+Sammyjo20@users.noreply.github.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Build beautiful API integrations and SDKs with Saloon",
+            "homepage": "https://github.com/saloonphp/saloon",
+            "keywords": [
+                "api",
+                "api-integrations",
+                "saloon",
+                "sammyjo20",
+                "sdk"
+            ],
+            "support": {
+                "issues": "https://github.com/saloonphp/saloon/issues",
+                "source": "https://github.com/saloonphp/saloon/tree/v4.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sammyjo20",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-03-17T22:58:33+00:00"
         },
         {
             "name": "sebastian/cli-parser",

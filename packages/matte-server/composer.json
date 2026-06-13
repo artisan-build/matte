@@ -1,0 +1,58 @@
+{
+    "name": "artisan-build/matte-server",
+    "description": "The server-side Matte package consumed by the Matte app.",
+    "keywords": ["matte", "laravel", "mcp"],
+    "license": "MIT",
+    "type": "library",
+    "version": "0.1.0",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../matte-contracts",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "artisan-build/matte-contracts": "^0.1",
+        "illuminate/contracts": "^13.0",
+        "illuminate/support": "^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^4.0",
+        "laravel/pint": "^1.27"
+    },
+    "autoload": {
+        "psr-4": {
+            "ArtisanBuild\\MatteServer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ArtisanBuild\\MatteServer\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint",
+        "lint:test": "pint --test"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "ArtisanBuild\\MatteServer\\MatteServerServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

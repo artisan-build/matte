@@ -1,0 +1,63 @@
+name: release-splits
+
+# Lockstep release: when a vX.Y.Z tag is pushed to the monorepo, mirror every
+# packages/* to its read-only split repo AND tag each split with the same
+# version — even packages with no changes (the illuminate/* model).
+on:
+  push:
+    tags:
+      - 'v*'
+
+# The built-in GITHUB_TOKEN only reaches this monorepo. Cross-repo pushes/tags to
+# the artisan-build/matte-* split repos use SPLIT_REPO_TOKEN (a fine-grained PAT
+# scoped to those repos with Contents: write), wired in below.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-splits
+  cancel-in-progress: false
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history — git subtree split needs it)
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies (incl. dev — kibble is a dev dependency)
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare application environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Configure git auth for cross-repo split pushes
+        env:
+          SPLIT_REPO_TOKEN: ${{ secrets.SPLIT_REPO_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # Token-rewrite every github.com push, so kibble's plain https remote URLs
+          # authenticate regardless of its askpass mechanism.
+          git config --global url."https://x-access-token:${SPLIT_REPO_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Split packages + tag each split repo in lockstep
+        env:
+          APP_ENV: production
+          GH_ORGANIZATION: artisan-build
+          GH_USERNAME: x-access-token
+          GH_TOKEN: ${{ secrets.SPLIT_REPO_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: php artisan kibble:split --tag="${RELEASE_TAG}"
