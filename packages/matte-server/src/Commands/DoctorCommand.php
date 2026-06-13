@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteServer\Commands;
 
+use ArtisanBuild\MatteContracts\Mode;
+use ArtisanBuild\MatteContracts\Preset;
+use ArtisanBuild\MatteContracts\RemovalOptions;
 use ArtisanBuild\MatteServer\BinaryLocator;
+use ArtisanBuild\MatteServer\Converter;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Process;
 use Throwable;
@@ -15,7 +19,7 @@ final class DoctorCommand extends Command
 
     protected $description = 'Verify the Matte binary runtime and run a real conversion.';
 
-    public function handle(): int
+    public function handle(Converter $converter): int
     {
         $locator = BinaryLocator::fromSystem();
         $onnx = $locator->onnxAsset();
@@ -35,20 +39,18 @@ final class DoctorCommand extends Command
             $libraryPath,
         );
 
-        $checks[] = $this->dependencyCheck($locator);
-        $checks[] = $this->conversionCheck($locator, end($checks) === true);
+        $checks[] = $this->dependencyCheck($locator, $converter);
+        $checks[] = $this->conversionCheck($converter, end($checks) === true);
 
         return in_array(false, $checks, true) ? self::FAILURE : self::SUCCESS;
     }
 
-    private function dependencyCheck(BinaryLocator $locator): bool
+    private function dependencyCheck(BinaryLocator $locator, Converter $converter): bool
     {
         if (PHP_OS_FAMILY === 'Linux') {
             $result = Process::timeout(30)->run(['ldd', $locator->binaryPath()]);
             $output = $result->output().$result->errorOutput();
-            $passed = $result->successful()
-                && str_contains($output, 'libonnxruntime')
-                && ! str_contains($output, 'not found');
+            $passed = $converter->dependenciesAvailable();
 
             return $this->check('Linux dynamic library resolution', $passed, trim($output));
         }
@@ -56,8 +58,8 @@ final class DoctorCommand extends Command
         if (PHP_OS_FAMILY === 'Darwin') {
             $result = Process::timeout(30)->run(['otool', '-L', $locator->binaryPath()]);
             $output = trim($result->output().$result->errorOutput());
-            $missing = $result->successful() ? $this->missingMacOsLibraries($locator, $output) : [];
-            $passed = $result->successful() && $missing === [];
+            $missing = $result->successful() ? $converter->missingMacOsLibraries($output) : [];
+            $passed = $converter->dependenciesAvailable();
 
             return $this->check(
                 'macOS dynamic library dependencies',
@@ -67,30 +69,6 @@ final class DoctorCommand extends Command
         }
 
         return $this->check('Dynamic library resolution', false, 'Unsupported operating system.');
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function missingMacOsLibraries(BinaryLocator $locator, string $otoolOutput): array
-    {
-        $missing = [];
-
-        foreach (preg_split('/\R/', $otoolOutput) ?: [] as $line) {
-            $library = trim(explode(' ', trim($line))[0] ?? '');
-
-            if ($library === '' || (! str_contains($library, 'opencv') && ! str_contains($library, 'onnxruntime'))) {
-                continue;
-            }
-
-            $path = str_replace('@loader_path', dirname($locator->binaryPath()), $library);
-
-            if (str_starts_with($path, '/') && ! is_file($path)) {
-                $missing[] = $library;
-            }
-        }
-
-        return $missing;
     }
 
     /**
@@ -111,7 +89,7 @@ final class DoctorCommand extends Command
         return $message;
     }
 
-    private function conversionCheck(BinaryLocator $locator, bool $dependenciesAvailable): bool
+    private function conversionCheck(Converter $converter, bool $dependenciesAvailable): bool
     {
         if (PHP_OS_FAMILY === 'Darwin' && ! $dependenciesAvailable) {
             $this->line('SKIP Real grabcut conversion');
@@ -131,15 +109,12 @@ final class DoctorCommand extends Command
         rename($outputPath, $pngOutputPath);
 
         try {
-            $result = Process::env($locator->executionEnv())
-                ->timeout(120)
-                ->run([$locator->binaryPath(), '-i', $samplePath, '-o', $pngOutputPath, '--grabcut', '-q', 'fast']);
-
-            $passed = $result->successful() && $this->isPngWithAlpha($pngOutputPath);
+            $converter->convert($samplePath, $pngOutputPath, new RemovalOptions(Mode::Grabcut, Preset::Fast));
+            $passed = $this->isPngWithAlpha($pngOutputPath);
 
             $details = $passed
                 ? 'Conversion output: '.$pngOutputPath
-                : $this->conversionFailureDetails($result->output().$result->errorOutput());
+                : $this->conversionFailureDetails('Output is not a PNG with alpha.');
         } catch (Throwable $exception) {
             $passed = false;
             $details = $this->conversionFailureDetails($exception->getMessage());
