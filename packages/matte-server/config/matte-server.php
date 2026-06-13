@@ -8,4 +8,8 @@ return [
     'onnx_version' => env('MATTE_ONNX_VERSION', '1.19.2'),
     'model' => env('MATTE_MODEL_NAME'),
     'model_url' => env('MATTE_MODEL_URL'),
+    'disk' => env('MATTE_DISK', 'local'),
+    'queue' => env('MATTE_QUEUE_CONNECTION'),
+    'timeout' => (int) env('MATTE_TIMEOUT', 120),
+    'default_mode' => env('MATTE_DEFAULT_MODE', 'grabcut'),
 ];
