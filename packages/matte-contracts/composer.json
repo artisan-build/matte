@@ -1,0 +1,38 @@
+{
+    "name": "artisan-build/matte-contracts",
+    "description": "The versioned contracts shared between matte-client and matte-server.",
+    "keywords": ["matte", "laravel", "contracts"],
+    "license": "MIT",
+    "type": "library",
+    "version": "0.1.0",
+    "require": {
+        "php": "^8.3"
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.0",
+        "laravel/pint": "^1.27"
+    },
+    "autoload": {
+        "psr-4": {
+            "ArtisanBuild\\MatteContracts\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ArtisanBuild\\MatteContracts\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint",
+        "lint:test": "pint --test"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,48 @@
+{
+    "name": "artisan-build/matte-client",
+    "description": "The client-side Matte package installed in consuming Laravel applications.",
+    "keywords": ["matte", "laravel"],
+    "license": "MIT",
+    "type": "library",
+    "version": "0.1.0",
+    "require": {
+        "php": "^8.3",
+        "illuminate/contracts": "^13.0",
+        "illuminate/support": "^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^4.0",
+        "laravel/pint": "^1.27"
+    },
+    "autoload": {
+        "psr-4": {
+            "ArtisanBuild\\MatteClient\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ArtisanBuild\\MatteClient\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint",
+        "lint:test": "pint --test"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "ArtisanBuild\\MatteClient\\MatteClientServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
