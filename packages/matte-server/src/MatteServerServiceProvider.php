@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace ArtisanBuild\MatteServer;
 
 use ArtisanBuild\MatteServer\Commands\DoctorCommand;
+use ArtisanBuild\MatteServer\Commands\IssueTokenCommand;
 use ArtisanBuild\MatteServer\Commands\ProvisionBinaryCommand;
 use ArtisanBuild\MatteServer\Commands\RemoveCommand;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 final class MatteServerServiceProvider extends ServiceProvider
@@ -21,9 +23,13 @@ final class MatteServerServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Route::prefix((string) config('matte-server.route_prefix', ''))
+            ->group(__DIR__.'/../routes/matte-server.php');
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 DoctorCommand::class,
+                IssueTokenCommand::class,
                 ProvisionBinaryCommand::class,
                 RemoveCommand::class,
             ]);
