@@ -6,10 +6,22 @@
     "type": "library",
     "version": "0.1.0",
     "require": {
+        "artisan-build/matte-contracts": "^0.1",
+        "guzzlehttp/guzzle": "^7.8",
         "php": "^8.3",
         "illuminate/contracts": "^13.0",
-        "illuminate/support": "^13.0"
+        "illuminate/support": "^13.0",
+        "laravel/prompts": "^0.3"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../matte-contracts",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require-dev": {
         "orchestra/testbench": "^11.0",
         "pestphp/pest": "^4.0",
