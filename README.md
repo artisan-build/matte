@@ -184,6 +184,31 @@ release at deploy time; it is not committed here. GrabCut is the no-model defaul
 on single subjects with contrasting backgrounds; ML mode (a U²-Net `.onnx` model) is
 remove.bg-competitive on harder images.
 
+## Releasing
+
+This is a monorepo; the three packages publish to Packagist from read-only split repos. A
+release is **lockstep** — every package is tagged the same version even if it didn't change,
+the way Laravel tags `illuminate/*`.
+
+To cut a release, push a `v*` tag to this repository:
+
+```shell
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+The [`release.yml`](.github/workflows/release.yml) workflow runs `php artisan kibble:split
+--tag=v1.2.3`. For each `packages/*` it does a `git subtree split` into the matching split
+repo (`artisan-build/matte-contracts`, `matte-server`, `matte-client`), strips the dev-only
+`version` field and path `repositories` from the split's `composer.json`, and force-pushes the
+content plus the tag. Packagist auto-updates from the new tag.
+
+**Prerequisite:** a `SPLIT_REPO_TOKEN` repository secret — a fine-grained PAT with
+**Contents: write** on the three split repos.
+
+Keep the inter-package constraints on the same major (e.g. `matte-server` requires
+`matte-contracts: ^1.0`) so a release resolves to itself.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
