@@ -4,7 +4,7 @@
     "keywords": ["matte", "laravel", "mcp"],
     "license": "MIT",
     "type": "library",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "repositories": [
         {
             "type": "path",
@@ -16,7 +16,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "artisan-build/matte-contracts": "^0.1",
+        "artisan-build/matte-contracts": "^1.0",
         "illuminate/contracts": "^13.0",
         "illuminate/support": "^13.0"
     },
