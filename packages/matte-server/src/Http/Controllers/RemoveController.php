@@ -88,6 +88,37 @@ final class RemoveController extends Controller
         )->toArray());
     }
 
+    public function result(Request $request, TokenRegistry $tokens, string $jobId): JsonResponse|Response
+    {
+        $appId = $tokens->resolve((string) $request->bearerToken());
+
+        if ($appId === null) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
+        $matteJob = MatteJob::query()->find($jobId);
+
+        if ($matteJob === null) {
+            return response()->json(['message' => 'Job not found.'], 404);
+        }
+
+        if ($matteJob->status !== JobStatus::Done) {
+            return response()->json([
+                'message' => 'Job is not complete.',
+                'status' => $matteJob->status->value,
+            ], 409);
+        }
+
+        $disk = Storage::disk((string) config('matte-server.disk', 'local'));
+
+        if ($matteJob->output_ref === null || ! $disk->exists($matteJob->output_ref)) {
+            return response()->json(['message' => 'Result not available.'], 404);
+        }
+
+        return response($disk->get($matteJob->output_ref), 200)
+            ->header('Content-Type', 'image/png');
+    }
+
     private function assertSupportedEnvelopeVersion(Request $request): void
     {
         $version = $request->input('envelope_version', Protocol::ENVELOPE_VERSION);
