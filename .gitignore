@@ -7,6 +7,7 @@
 /storage/matte-runtime
 /storage/pail
 /vendor
+/.phpstorm.meta.php
 /packages/*/vendor
 /packages/*/composer.lock
 /packages/*/.phpunit.cache
