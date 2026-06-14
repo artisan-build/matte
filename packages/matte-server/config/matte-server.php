@@ -12,6 +12,7 @@ return [
     'model_url' => env('MATTE_MODEL_URL'),
     'disk' => env('MATTE_DISK', env('FILESYSTEM_DISK', 'local')),
     'queue' => env('MATTE_QUEUE_CONNECTION'),
+    'webhook_secret' => env('MATTE_WEBHOOK_SECRET'),
     'timeout' => (int) env('MATTE_TIMEOUT', 120),
     'default_mode' => env('MATTE_DEFAULT_MODE', 'grabcut'),
     'route_prefix' => env('MATTE_ROUTE_PREFIX', ''),

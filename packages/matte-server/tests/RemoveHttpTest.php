@@ -96,6 +96,55 @@ it('returns not found for unknown jobs', function (): void {
     $this->getJson('/v1/jobs/missing')->assertNotFound();
 });
 
+it('rejects result requests without a bearer token', function (): void {
+    $this->getJson('/v1/jobs/missing/result')
+        ->assertUnauthorized()
+        ->assertJson(['message' => 'Unauthorized.']);
+});
+
+it('returns not found for unknown job results', function (): void {
+    $this->withToken('known-token')->getJson('/v1/jobs/missing/result')
+        ->assertNotFound()
+        ->assertJson(['message' => 'Job not found.']);
+});
+
+it('rejects incomplete job results', function (): void {
+    $matteJob = MatteJob::factory()->create();
+
+    $this->withToken('known-token')->getJson('/v1/jobs/'.$matteJob->id.'/result')
+        ->assertStatus(409)
+        ->assertJson([
+            'message' => 'Job is not complete.',
+            'status' => 'queued',
+        ]);
+});
+
+it('returns completed job result bytes', function (): void {
+    Storage::fake('matte-test');
+
+    $bytes = 'png-bytes';
+    $outputRef = 'outputs/result.png';
+    Storage::disk('matte-test')->put($outputRef, $bytes);
+    $matteJob = MatteJob::factory()->done()->create(['output_ref' => $outputRef]);
+
+    $response = $this->withToken('known-token')->get('/v1/jobs/'.$matteJob->id.'/result');
+
+    $response->assertSuccessful()
+        ->assertHeader('Content-Type', 'image/png');
+
+    expect($response->getContent())->toBe($bytes);
+});
+
+it('returns not found when completed job result object is missing', function (): void {
+    Storage::fake('matte-test');
+
+    $matteJob = MatteJob::factory()->done()->create(['output_ref' => 'outputs/missing.png']);
+
+    $this->withToken('known-token')->getJson('/v1/jobs/'.$matteJob->id.'/result')
+        ->assertNotFound()
+        ->assertJson(['message' => 'Result not available.']);
+});
+
 it('runs sync conversion when dependencies are available and reports remediation otherwise', function (): void {
     Storage::fake('matte-test');
 
