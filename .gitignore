@@ -27,3 +27,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Laravel Cloud repo binding (per-fork org/app)
+/.cloud/config.json
