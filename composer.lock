@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cc7274d99c71643ed1699784cb537b1d",
+    "content-hash": "0bca1822a7ed206d5f676222de60b4bc",
     "packages": [
         {
             "name": "artisan-build/built-for-cloud",
@@ -66,11 +66,11 @@
         },
         {
             "name": "artisan-build/matte-contracts",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "dist": {
                 "type": "path",
                 "url": "packages/matte-contracts",
-                "reference": "5092aae81a075e291596bc2e08319242dc5ffdce"
+                "reference": "05eb49e94bed3b0262fd732cc9592ed2d5b4d590"
             },
             "require": {
                 "php": "^8.3"
@@ -117,15 +117,15 @@
         },
         {
             "name": "artisan-build/matte-server",
-            "version": "1.0.0",
+            "version": "2.0.0",
             "dist": {
                 "type": "path",
                 "url": "packages/matte-server",
-                "reference": "4c612f307ab63123262029382fc486b8bd7a97f4"
+                "reference": "ab6a6312aba2477c0baef8434374d1e285efb53c"
             },
             "require": {
                 "artisan-build/built-for-cloud": "^0.1",
-                "artisan-build/matte-contracts": "^1.0",
+                "artisan-build/matte-contracts": "^2.0",
                 "illuminate/contracts": "^13.0",
                 "illuminate/support": "^13.0",
                 "php": "^8.3"
