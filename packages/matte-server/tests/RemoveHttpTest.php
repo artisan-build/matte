@@ -54,7 +54,7 @@ it('queues remove requests with valid database bearer tokens and records token i
         ->assertJsonStructure(['job_id']);
 
     $jobId = $response->json('job_id');
-    $outputKey = OutputKey::for($bytes, new RemovalOptions(mode: Mode::Grabcut, preset: Preset::Balanced));
+    $outputKey = OutputKey::for($bytes, new RemovalOptions(mode: Mode::Ml, preset: Preset::Balanced));
 
     expect(MatteJob::query()->find($jobId))
         ->not->toBeNull()

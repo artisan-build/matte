@@ -12,6 +12,6 @@ return [
     'queue' => env('MATTE_QUEUE_CONNECTION'),
     'webhook_secret' => env('MATTE_WEBHOOK_SECRET'),
     'timeout' => (int) env('MATTE_TIMEOUT', 120),
-    'default_mode' => env('MATTE_DEFAULT_MODE', 'grabcut'),
+    'default_mode' => env('MATTE_DEFAULT_MODE', 'ml'),
     'route_prefix' => env('MATTE_ROUTE_PREFIX', ''),
 ];
