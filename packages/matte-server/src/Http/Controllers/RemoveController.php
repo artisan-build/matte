@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteServer\Http\Controllers;
 
+use ArtisanBuild\BuiltForCloud\TokenRegistry;
 use ArtisanBuild\MatteContracts\Exceptions\InvalidEnvelope;
 use ArtisanBuild\MatteContracts\JobStatus;
 use ArtisanBuild\MatteContracts\JobStatusEnvelope;
@@ -14,7 +15,6 @@ use ArtisanBuild\MatteServer\Exceptions\ConversionFailed;
 use ArtisanBuild\MatteServer\Jobs\RemoveBackgroundJob;
 use ArtisanBuild\MatteServer\MatteJob;
 use ArtisanBuild\MatteServer\OutputKey;
-use ArtisanBuild\MatteServer\TokenRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -49,6 +49,7 @@ final class RemoveController extends Controller
         Storage::disk($diskName)->put($inputRef, $bytes);
 
         $matteJob = MatteJob::query()->create([
+            'token_id' => $appId,
             'input_ref' => $inputRef,
             'mode' => $options->mode->value,
             'preset' => $options->preset->value,

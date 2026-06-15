@@ -4,8 +4,66 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "49b71339a317ecfa5177a432304b25a6",
+    "content-hash": "cc7274d99c71643ed1699784cb537b1d",
     "packages": [
+        {
+            "name": "artisan-build/built-for-cloud",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/artisan-build/built-for-cloud.git",
+                "reference": "c42aec7ae8ab31ec21dad31a29cbb635927cb52f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/c42aec7ae8ab31ec21dad31a29cbb635927cb52f",
+                "reference": "c42aec7ae8ab31ec21dad31a29cbb635927cb52f",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^13.0",
+                "illuminate/contracts": "^13.0",
+                "illuminate/database": "^13.0",
+                "illuminate/process": "^13.0",
+                "illuminate/support": "^13.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.9",
+                "laravel/pint": "^1.27",
+                "orchestra/testbench": "^11.0",
+                "pestphp/pest": "^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ArtisanBuild\\BuiltForCloud\\BuiltForCloudServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ArtisanBuild\\BuiltForCloud\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Shared building blocks for administering cloud-first Laravel apps from the Laravel Cloud CLI.",
+            "keywords": [
+                "api-tokens",
+                "artisan-build",
+                "laravel",
+                "laravel-cloud"
+            ],
+            "support": {
+                "issues": "https://github.com/artisan-build/built-for-cloud/issues",
+                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.1.0"
+            },
+            "time": "2026-06-15T09:17:16+00:00"
+        },
         {
             "name": "artisan-build/matte-contracts",
             "version": "1.0.0",
@@ -63,9 +121,10 @@
             "dist": {
                 "type": "path",
                 "url": "packages/matte-server",
-                "reference": "9f7da487dc181005e9af92722d4eea20a2366e2c"
+                "reference": "4c612f307ab63123262029382fc486b8bd7a97f4"
             },
             "require": {
+                "artisan-build/built-for-cloud": "^0.1",
                 "artisan-build/matte-contracts": "^1.0",
                 "illuminate/contracts": "^13.0",
                 "illuminate/support": "^13.0",

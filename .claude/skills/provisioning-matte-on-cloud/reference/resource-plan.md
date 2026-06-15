@@ -48,10 +48,9 @@ cloud managed-queue:set-default <queue>          # leave MATTE_QUEUE_CONNECTION 
 cloud deploy matte main --no-wait -n             # → deployment_id
 cloud deployment:get <deployment_id> --json -n   # poll until deployment.succeeded
 
-# 8. FIRST TOKEN, then register + redeploy
-cloud command:run <env> --cmd="php artisan matte:issue-token <client-id>" -n   # prints token + entry once
-cloud environment:variables <env> --action set --key MATTE_TOKENS --value "<id>=<sha256>" -n --force
-cloud deploy matte main --no-wait -n             # redeploy to apply MATTE_TOKENS
+# 8. BOOTSTRAP TOKEN, then redeploy (per-app tokens come later via `token:create`)
+cloud environment:variables <env> --action set --key FALLBACK_TOKEN --value "<random-secret>" -n --force
+cloud deploy matte main --no-wait -n             # redeploy to apply FALLBACK_TOKEN
 ```
 
 ## Verify (functional — never by `environment:get`)
@@ -73,7 +72,7 @@ curl -s "https://<env-url>/v1/jobs/<job_id>" -H "Authorization: Bearer <token>" 
 | --- | --- | --- |
 | `DB_CONNECTION` | `pgsql` | DB_* host/db/user/password are Cloud-injected from the attached schema on deploy. |
 | `MATTE_RUNTIME_PATH` | `/var/www/html/runtime` | `base_path` location so the build-baked binary ships in the artifact. |
-| `MATTE_TOKENS` | `<id>=<sha256>,…` | From `matte:issue-token`. Apply on (re)deploy. |
+| `FALLBACK_TOKEN` | `<random-secret>` | Bootstrap/fallback token. Delete it and use per-app `token:create` tokens for production. Apply on (re)deploy. |
 | `MATTE_DISK` | **unset** | Defaults to `FILESYSTEM_DISK` (the injected `private` bucket disk). Set only to override. |
 | `MATTE_QUEUE_CONNECTION` | **unset** | Job dispatches on the app's default connection = the managed queue (after `set-default`). |
 | `MATTE_BG_REMOVER_TAG` | unset (default `v0.7.1`) | The pinned bg-remover release. |

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteServer\Tests;
 
+use ArtisanBuild\BuiltForCloud\BuiltForCloudServiceProvider;
 use ArtisanBuild\MatteServer\MatteServerServiceProvider;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -16,6 +17,6 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
-        return [MatteServerServiceProvider::class];
+        return [BuiltForCloudServiceProvider::class, MatteServerServiceProvider::class];
     }
 }

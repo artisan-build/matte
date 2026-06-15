@@ -61,8 +61,8 @@ php artisan matte:install
 
 `matte:install` prompts for the Matte server URL and the API token (and an optional webhook
 secret), writes `MATTE_URL` / `MATTE_TOKEN` / `MATTE_WEBHOOK_SECRET` to your `.env`, publishes
-the config, and pins `matte-contracts` to a caret constraint. Generate the token on the server
-with `php artisan matte:issue-token <client-id>`.
+the config, and pins `matte-contracts` to a caret constraint. Generate the token with
+`php artisan token:create <client-id>` (from `artisan-build/built-for-cloud`).
 
 ## License
 

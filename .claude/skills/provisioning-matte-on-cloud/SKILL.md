@@ -52,7 +52,7 @@ Capture ids from `cloud application:get <app> --json -n` (→ `defaultEnvironmen
 3. **Bucket** — have the user attach a bucket to the env in the **dashboard** (Storage tab). Then it's the
    default disk; `MATTE_DISK` needs no value.
 4. **Managed queue** — create in the **dashboard** (v0.5.0 CLI bug), then `managed-queue:set-default`.
-5. **Deploy command** → `php artisan migrate --force`. **Token** → `MATTE_TOKENS` (Step 4).
+5. **Deploy command** → `php artisan migrate --force`. **Token** → `FALLBACK_TOKEN` (Step 4).
 6. **Deploy** and poll (`cloud deploy matte main --no-wait -n` → `deployment:get <id> --json -n`).
 
 ## Step 3 — Confirm + gate (REQUIRED before billables)
@@ -63,9 +63,11 @@ per-image compute is a fraction of a cent). **Wait for approval before any `:cre
 
 ## Step 4 — First token + verify (functional, not by readback)
 
-- Issue a token: `cloud command:run <env> --cmd="php artisan matte:issue-token <id>" -n` (prints the
-  plaintext once + the `MATTE_TOKENS=` entry). Set it: `environment:variables <env> --action set --key
-  MATTE_TOKENS --value "<id>=<sha256>" -n --force`, then **redeploy** (env vars apply on deploy).
+- Set a bootstrap token: generate a strong random secret and set it as the `FALLBACK_TOKEN` env var —
+  `environment:variables <env> --action set --key FALLBACK_TOKEN --value "<secret>" -n --force`, then
+  **redeploy** (env vars apply on deploy). This single fallback token authenticates immediately; for
+  production, provision per-app tokens with `php artisan token:create <id>` (from
+  `artisan-build/built-for-cloud`) and delete `FALLBACK_TOKEN`.
 - **Binary on the worker:** `cloud command:run <env> --cmd="php artisan matte:doctor" -n` → must show
   `PASS Real grabcut conversion`.
 - **Sync API:** `curl -F image=@sample.jpg "https://<env-url>/v1/remove?sync=1" -H "Authorization: Bearer

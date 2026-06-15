@@ -35,7 +35,9 @@ are Cloud-managed resources; nothing else is required.
 
 ## The HTTP API
 
-All routes are token-authenticated with a `Bearer` token (resolved against `MATTE_TOKENS`).
+All routes are token-authenticated with a `Bearer` token, resolved against the hashed `api_tokens`
+table (managed by [`artisan-build/built-for-cloud`](https://github.com/artisan-build/built-for-cloud))
+or the `FALLBACK_TOKEN` environment variable.
 
 | Method & path | Purpose |
 | --- | --- |
@@ -58,7 +60,10 @@ header (HMAC-SHA256 over the exact body) so the receiver can verify authenticity
 | `matte:provision-binary` | Fetch the pinned `bg-remover` binary + ONNX runtime (+ optional model) into the runtime layout. Run as a **build command**. |
 | `matte:doctor` | Verify the binary runtime and run a real conversion. |
 | `matte:remove <path>` | Synchronous CLI conversion (no queue) — the local eyeball loop. |
-| `matte:issue-token <id>` | Mint an API token and print the `MATTE_TOKENS` entry. |
+
+API tokens are managed by the `token:*` commands from
+[`artisan-build/built-for-cloud`](https://github.com/artisan-build/built-for-cloud)
+(`token:create`, `token:rotate`, `token:revoke`, `token:list`, `token:usage`).
 
 ## Configuration
 
@@ -66,7 +71,7 @@ Env vars (all `MATTE_*` keys live in `config/matte-server.php`):
 
 | Key | Meaning |
 | --- | --- |
-| `MATTE_TOKENS` | Comma-separated `id=sha256hash` API tokens. |
+| `FALLBACK_TOKEN` | Optional single bootstrap/fallback API token (plaintext). Delete it and use per-app `api_tokens` for production workloads. |
 | `MATTE_DISK` | Storage disk for originals + outputs. Defaults to `FILESYSTEM_DISK` (the bucket Cloud injects), then `local`. |
 | `MATTE_RUNTIME_PATH` | Where the binary is provisioned. On Cloud, a `base_path` location so it ships in the artifact. |
 | `MATTE_BG_REMOVER_TAG` | Pinned `bg-remover` release (default `v0.7.1`). |
