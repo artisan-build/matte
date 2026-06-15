@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use ArtisanBuild\BuiltForCloud\ApiToken;
 use ArtisanBuild\MatteContracts\JobStatus;
 use ArtisanBuild\MatteContracts\Mode;
 use ArtisanBuild\MatteContracts\Preset;
@@ -11,16 +12,21 @@ use ArtisanBuild\MatteServer\Converter;
 use ArtisanBuild\MatteServer\Jobs\RemoveBackgroundJob;
 use ArtisanBuild\MatteServer\MatteJob;
 use ArtisanBuild\MatteServer\OutputKey;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
+uses(RefreshDatabase::class);
+
 beforeEach(function (): void {
-    $this->artisan('migrate')->assertExitCode(0);
     config()->set('matte-server.disk', 'matte-test');
-    config()->set('matte-server.tokens', [
-        ['id' => 'app', 'token_hash' => hash('sha256', 'known-token')],
+    config()->set('built-for-cloud.fallback_token', null);
+
+    ApiToken::factory()->create([
+        'name' => 'app',
+        'token_hash' => hash('sha256', 'known-token'),
     ]);
 });
 
@@ -30,7 +36,7 @@ it('rejects remove requests without a bearer token', function (): void {
         ->assertJson(['message' => 'Unauthorized.']);
 });
 
-it('queues remove requests with valid bearer tokens', function (): void {
+it('queues remove requests with valid database bearer tokens and records token ids', function (): void {
     Queue::fake();
     Storage::fake('matte-test');
 
@@ -52,13 +58,39 @@ it('queues remove requests with valid bearer tokens', function (): void {
 
     expect(MatteJob::query()->find($jobId))
         ->not->toBeNull()
-        ->status->toBe(JobStatus::Queued);
+        ->status->toBe(JobStatus::Queued)
+        ->token_id->toBe('app');
 
     Queue::assertPushed(RemoveBackgroundJob::class, function (RemoveBackgroundJob $job) use ($jobId, $outputKey): bool {
         return $job->matteJobId === $jobId
             && $job->diskName === 'matte-test'
             && $job->outputKey === $outputKey;
     });
+});
+
+it('authenticates fallback tokens and records fallback token ids', function (): void {
+    Queue::fake();
+    Storage::fake('matte-test');
+    config()->set('built-for-cloud.fallback_token', 'master-secret');
+
+    $response = $this->withToken('master-secret')->postJson('/v1/remove', [
+        'image' => UploadedFile::fake()->image('x.png'),
+    ]);
+
+    $response->assertStatus(202);
+
+    expect(MatteJob::query()->find($response->json('job_id')))
+        ->not->toBeNull()
+        ->token_id->toBe('fallback');
+});
+
+it('rejects unknown bearer tokens when fallback authentication is disabled', function (): void {
+    config()->set('built-for-cloud.fallback_token', null);
+
+    $this->withToken('wrong-token')->postJson('/v1/remove', [
+        'image' => UploadedFile::fake()->image('x.png'),
+    ])->assertUnauthorized()
+        ->assertJson(['message' => 'Unauthorized.']);
 });
 
 it('rejects future envelope versions', function (): void {
