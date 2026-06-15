@@ -144,14 +144,18 @@ See [`matte-contracts`](packages/matte-contracts) for the rules and the envelope
 
 ## Quick start
 
-**On the deployed Matte server**, issue an API token for a consumer:
+**Issue an API token** for a consumer. Tokens are managed by
+[`artisan-build/built-for-cloud`](https://github.com/artisan-build/built-for-cloud) and stored
+(hashed) in your deployed database; the command runs against your deployed environment through the
+Laravel Cloud CLI:
 
 ```shell
-php artisan matte:issue-token <client-id>
+php artisan token:create <client-id>
 ```
 
-It prints the plaintext token once and the `MATTE_TOKENS` entry (`client-id=sha256hash`). Add
-that entry to `MATTE_TOKENS` on the server and redeploy.
+The plaintext token is printed once — store it in the consuming app. For local or bootstrap use you
+can instead set a single `FALLBACK_TOKEN` in the environment (delete it and use per-app tokens for
+production workloads).
 
 **In a consuming Laravel app:**
 
