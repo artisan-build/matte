@@ -66,11 +66,11 @@
         },
         {
             "name": "artisan-build/matte-contracts",
-            "version": "2.0.0",
+            "version": "2.1.0",
             "dist": {
                 "type": "path",
                 "url": "packages/matte-contracts",
-                "reference": "05eb49e94bed3b0262fd732cc9592ed2d5b4d590"
+                "reference": "f62d9e820df511ac63a04476fb33cd87f4d0a6b9"
             },
             "require": {
                 "php": "^8.3"
@@ -117,11 +117,11 @@
         },
         {
             "name": "artisan-build/matte-server",
-            "version": "2.0.0",
+            "version": "2.1.0",
             "dist": {
                 "type": "path",
                 "url": "packages/matte-server",
-                "reference": "ab6a6312aba2477c0baef8434374d1e285efb53c"
+                "reference": "1edcdb63dd3ddd8c040714d7e7fa0f4bd99b54fb"
             },
             "require": {
                 "artisan-build/built-for-cloud": "^0.1",
