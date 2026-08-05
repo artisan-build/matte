@@ -4,27 +4,29 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0b4fb947f53ed02eeaa3d5d41a58b6f8",
+    "content-hash": "611cb2461a4f29ea3ef63d7b024d920f",
     "packages": [
         {
             "name": "artisan-build/built-for-cloud",
-            "version": "v0.1.0",
+            "version": "v0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/built-for-cloud.git",
-                "reference": "c42aec7ae8ab31ec21dad31a29cbb635927cb52f"
+                "reference": "ebe15d71f06b75e9177c5f060b8ac3620327e855"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/c42aec7ae8ab31ec21dad31a29cbb635927cb52f",
-                "reference": "c42aec7ae8ab31ec21dad31a29cbb635927cb52f",
+                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/ebe15d71f06b75e9177c5f060b8ac3620327e855",
+                "reference": "ebe15d71f06b75e9177c5f060b8ac3620327e855",
                 "shasum": ""
             },
             "require": {
+                "illuminate/auth": "^13.0",
                 "illuminate/console": "^13.0",
                 "illuminate/contracts": "^13.0",
                 "illuminate/database": "^13.0",
                 "illuminate/process": "^13.0",
+                "illuminate/routing": "^13.0",
                 "illuminate/support": "^13.0",
                 "php": "^8.3"
             },
@@ -60,9 +62,9 @@
             ],
             "support": {
                 "issues": "https://github.com/artisan-build/built-for-cloud/issues",
-                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.1.0"
+                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.3.0"
             },
-            "time": "2026-06-15T09:17:16+00:00"
+            "time": "2026-08-05T13:19:39+00:00"
         },
         {
             "name": "artisan-build/matte-contracts",
@@ -121,10 +123,10 @@
             "dist": {
                 "type": "path",
                 "url": "packages/matte-server",
-                "reference": "1edcdb63dd3ddd8c040714d7e7fa0f4bd99b54fb"
+                "reference": "d133060990bcd7f0d9947a99ea96facaaf95f540"
             },
             "require": {
-                "artisan-build/built-for-cloud": "^0.1",
+                "artisan-build/built-for-cloud": "^0.3",
                 "artisan-build/matte-contracts": "^2.0",
                 "illuminate/contracts": "^13.0",
                 "illuminate/support": "^13.0",
