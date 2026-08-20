@@ -73,7 +73,7 @@ Env vars (all `MATTE_*` keys live in `config/matte-server.php`):
 | --- | --- |
 | `FALLBACK_TOKEN` | Optional single bootstrap/fallback API token (plaintext). Delete it and use per-app `api_tokens` for production workloads. |
 | `MATTE_DISK` | Storage disk for originals + outputs. Defaults to `FILESYSTEM_DISK` (the bucket Cloud injects), then `local`. |
-| `MATTE_RUNTIME_PATH` | Where the binary is provisioned. On Cloud, a `base_path` location so it ships in the artifact. |
+| `MATTE_RUNTIME_PATH` | Optional override for where the binary is provisioned. Defaults to `base_path('runtime')` — a location inside the deploy artifact, so the build-provisioned binary ships to every instance. |
 | `MATTE_BG_REMOVER_TAG` | Pinned `bg-remover` release (default `v0.7.1`). |
 | `MATTE_QUEUE_CONNECTION` | Queue for the removal job. Leave unset to use the app default (the managed queue). |
 | `MATTE_WEBHOOK_SECRET` | HMAC secret for signing completion webhooks. |

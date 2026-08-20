@@ -3,6 +3,7 @@
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
+/runtime
 /storage/*.key
 /storage/matte-runtime
 /storage/pail

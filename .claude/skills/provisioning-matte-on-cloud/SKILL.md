@@ -22,7 +22,7 @@ sets, and **confirm before any billable `:create`**.
 | App + default env + Postgres + first deploy | **`cloud ship`** (interactive, once) | One command does app+env+DB+instance+attach+deploy and resolves the org. Avoids the broken `instance:create`/`environment:update` attach paths. |
 | Repo binding | **`cloud repo:config`** (interactive, once) | Writes `.cloud/config.json` `{organization_id, application_id}` so later commands are non-interactive. |
 | Database attach | `environment:update --database-id <schemaId>` + a deploy | Takes effect **on deploy**; `environment:get` under-reports `databaseSchemaId` — verify by exercising, not by readback. Set `DB_CONNECTION=pgsql`. |
-| **bg-remover binary** | **build command**: `… && php artisan matte:provision-binary` + `MATTE_RUNTIME_PATH=/var/www/html/runtime` | Build-command fs changes persist into the artifact shipped to **every** instance (web + worker). Build runs arm64, so it fetches the correct `bg-remover-linux-arm64`. Deploy-command fs changes do NOT persist — don't use it for this. |
+| **bg-remover binary** | **build command**: `… && php artisan matte:provision-binary` | No env var needed — `runtime_path` defaults to `base_path('runtime')` = `/var/www/html/runtime` on Cloud. Build-command fs changes persist into the artifact shipped to **every** instance (web + worker). Build runs arm64, so it fetches the correct `bg-remover-linux-arm64`. Deploy-command fs changes do NOT persist — don't use it for this. |
 | Object storage bucket | **dashboard** (env → Storage → attach) | The CLI can `bucket:create` org-level but cannot associate to an env. Once attached, Cloud injects a `private` S3 disk + `FILESYSTEM_DISK=private` as the default — Matte uses it automatically (`MATTE_DISK` defaults to `FILESYSTEM_DISK`). You never handle the R2 secret. |
 | Managed queue | **dashboard** on v0.5.0 (`managed-queue:create` is bugged — always sends `min_replicas`) | The worker. Once created, `managed-queue:set-default` and leave `MATTE_QUEUE_CONNECTION` unset so jobs dispatch on the default connection. |
 | Scheduler | `instance:update <inst> --uses-scheduler=true` | Only if a prune/maintenance command exists. |
@@ -44,9 +44,9 @@ versions — some may become scriptable.)
 Capture ids from `cloud application:get <app> --json -n` (→ `defaultEnvironmentId`, env url) and follow
 **`reference/resource-plan.md`** exactly — it has the validated command sequence. High level:
 
-1. **Build command** → bake the binary into the artifact:
-   `cloud environment:variables <env> --action set --key MATTE_RUNTIME_PATH --value /var/www/html/runtime -n --force`
-   then set the build command to append `php artisan matte:provision-binary` (see resource-plan).
+1. **Build command** → bake the binary into the artifact: set the build command to append
+   `php artisan matte:provision-binary` (see resource-plan). No `MATTE_RUNTIME_PATH` needed — the default
+   already resolves to `/var/www/html/runtime`.
 2. **Database** — if `ship` didn't fully provision it (check `databaseSchemaId`/exercise): create a Neon
    cluster + schema, `environment:update <env> --database-id <schemaId> -n --force`, set `DB_CONNECTION=pgsql`.
 3. **Bucket** — have the user attach a bucket to the env in the **dashboard** (Storage tab). Then it's the
