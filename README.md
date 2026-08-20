@@ -2,6 +2,8 @@
 
 **Self-hosted, unmetered image background removal on Laravel Cloud.**
 
+> **Don't want to run it?** Matte is MIT — fork and own it. Or [have Artisan Build deploy and operate it](https://artisan.build/start?ref=gh-matte-top) in your Cloud account.
+
 Matte is background removal you **fork and deploy to your own Laravel Cloud account**. Drop the
 client into any Laravel app, point it at your self-hosted server, and get transparent PNGs
 back — asynchronously through a queue (poll or signed webhook) or synchronously for small
@@ -75,6 +77,17 @@ Cloud app**. There is no extra infrastructure to operate.
 > binary provisioning, wires the `MATTE_*` config, deploys, migrates, and issues the first API
 > token. It specializes the Cloud CLI's generic `deploying-laravel-cloud` skill; the manual
 > equivalent is in the skill's [`reference/`](.claude/skills/provisioning-matte-on-cloud/reference/).
+
+## Prefer not to operate it?
+
+The binary provisioning, the arm64 worker, the queue autoscaling, object storage, and
+staying current on the `bg-remover` release and the Matte server are all yours to run on
+the fork-and-own path — and it's fully documented above.
+
+If you'd rather ship product than operate an image pipeline, **[Artisan Build will run
+Matte in your own Laravel Cloud account](https://artisan.build/start?ref=gh-matte-deploy)**
+— single-tenant, your bucket, your compute, no per-image bill to anyone — and keep the
+binary and server patched. Unmetered background removal, none of the upkeep.
 
 ---
 
@@ -212,6 +225,12 @@ content plus the tag. Packagist auto-updates from the new tag.
 
 Keep the inter-package constraints on the same major (e.g. `matte-server` requires
 `matte-contracts: ^1.0`) so a release resolves to itself.
+
+## Managed by Artisan Build
+
+Matte is built and maintained by [Artisan Build](https://artisan.build). Fork it and own
+it, or [have us deploy and maintain it](https://artisan.build/start?ref=gh-matte-footer) in
+your Cloud account.
 
 ## License
 
