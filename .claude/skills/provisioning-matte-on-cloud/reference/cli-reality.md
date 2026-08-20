@@ -69,8 +69,9 @@ Cloud team is aware of several of these.
 ## The binary-on-Cloud answer (validated)
 
 - Build command: `composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader && php
-  artisan matte:provision-binary`, with env `MATTE_RUNTIME_PATH=/var/www/html/runtime` (a `base_path`
-  location — NOT `storage/`, which Cloud may mount over). The build runs **arm64**, so `BinaryLocator`
+  artisan matte:provision-binary`. No env var required: `runtime_path` defaults to `base_path('runtime')`
+  = `/var/www/html/runtime` (a `base_path` location — NOT `storage/`, which is not persisted into the
+  artifact). `MATTE_RUNTIME_PATH` remains available as an override. The build runs **arm64**, so `BinaryLocator`
   fetches `bg-remover-linux-arm64` correctly; the ~8 MB binary + `lib/libonnxruntime.so.1` are baked into
   the artifact and ship to **every** instance. Verified: `matte:doctor` → `PASS Real grabcut conversion`
   from the artifact with no re-download.

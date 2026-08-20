@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'runtime_path' => env('MATTE_RUNTIME_PATH', storage_path('matte-runtime')),
+    'runtime_path' => env('MATTE_RUNTIME_PATH', base_path('runtime')),
     'bg_remover_tag' => env('MATTE_BG_REMOVER_TAG', 'v0.8.0'),
     'onnx_version' => env('MATTE_ONNX_VERSION', '1.19.2'),
     'model' => env('MATTE_MODEL_NAME', 'isnet-general-use.onnx'),

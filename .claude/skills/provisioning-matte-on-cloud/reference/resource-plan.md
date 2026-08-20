@@ -30,7 +30,7 @@ cloud environment:update <env> --database-id <schema-id> -n --force  # attaches;
 cloud environment:variables <env> --action set --key DB_CONNECTION --value pgsql -n --force
 
 # 3. BINARY via BUILD command (bakes bg-remover-linux-arm64 into the artifact -> all instances)
-cloud environment:variables <env> --action set --key MATTE_RUNTIME_PATH --value /var/www/html/runtime -n --force
+#    No MATTE_RUNTIME_PATH needed: runtime_path defaults to base_path('runtime') = /var/www/html/runtime.
 cloud environment:update <env> -n --force \
   --build-command="composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader && php artisan matte:provision-binary"
 
@@ -71,7 +71,7 @@ curl -s "https://<env-url>/v1/jobs/<job_id>" -H "Authorization: Bearer <token>" 
 | Key | Value | Notes |
 | --- | --- | --- |
 | `DB_CONNECTION` | `pgsql` | DB_* host/db/user/password are Cloud-injected from the attached schema on deploy. |
-| `MATTE_RUNTIME_PATH` | `/var/www/html/runtime` | `base_path` location so the build-baked binary ships in the artifact. |
+| `MATTE_RUNTIME_PATH` | **unset** | Defaults to `base_path('runtime')` = `/var/www/html/runtime`, so the build-baked binary ships in the artifact. Set only to override. |
 | `FALLBACK_TOKEN` | `<random-secret>` | Bootstrap/fallback token. Delete it and use per-app `token:create` tokens for production. Apply on (re)deploy. |
 | `MATTE_DISK` | **unset** | Defaults to `FILESYSTEM_DISK` (the injected `private` bucket disk). Set only to override. |
 | `MATTE_QUEUE_CONNECTION` | **unset** | Job dispatches on the app's default connection = the managed queue (after `set-default`). |
