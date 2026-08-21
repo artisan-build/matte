@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "artisan-build/built-for-cloud",
-            "version": "v0.3.0",
+            "version": "v0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/built-for-cloud.git",
-                "reference": "ebe15d71f06b75e9177c5f060b8ac3620327e855"
+                "reference": "64b12080721277b75713a27f232a23403f4b5c22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/ebe15d71f06b75e9177c5f060b8ac3620327e855",
-                "reference": "ebe15d71f06b75e9177c5f060b8ac3620327e855",
+                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/64b12080721277b75713a27f232a23403f4b5c22",
+                "reference": "64b12080721277b75713a27f232a23403f4b5c22",
                 "shasum": ""
             },
             "require": {
@@ -62,9 +62,9 @@
             ],
             "support": {
                 "issues": "https://github.com/artisan-build/built-for-cloud/issues",
-                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.3.0"
+                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.3.2"
             },
-            "time": "2026-08-05T13:19:39+00:00"
+            "time": "2026-08-21T10:15:21+00:00"
         },
         {
             "name": "artisan-build/matte-contracts",
