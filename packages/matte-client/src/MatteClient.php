@@ -55,7 +55,8 @@ final readonly class MatteClient
 
     public function status(string $jobId): JobStatusEnvelope
     {
-        $payload = Http::withToken($this->configuredToken())
+        $payload = Http::withClientIdentity()
+            ->withToken($this->configuredToken())
             ->get($this->endpoint("/v1/jobs/{$jobId}"));
 
         if (! $payload->successful()) {
@@ -73,7 +74,8 @@ final readonly class MatteClient
 
     public function result(string $jobId): string
     {
-        $payload = Http::withToken($this->configuredToken())
+        $payload = Http::withClientIdentity()
+            ->withToken($this->configuredToken())
             ->get($this->endpoint("/v1/jobs/{$jobId}/result"));
 
         if ($payload->status() !== 200) {
@@ -107,7 +109,8 @@ final readonly class MatteClient
 
         $url = $this->endpoint('/v1/remove').($sync ? '?sync=1' : '');
 
-        return Http::withToken($this->configuredToken())
+        return Http::withClientIdentity()
+            ->withToken($this->configuredToken())
             ->attach('image', $normalizedImage['contents'], $normalizedImage['filename'])
             ->post($url, $fields);
     }

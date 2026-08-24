@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteClient\Tests;
 
+use ArtisanBuild\BfcClient\BfcClientServiceProvider;
 use ArtisanBuild\MatteClient\MatteClientServiceProvider;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -16,6 +17,6 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
-        return [MatteClientServiceProvider::class];
+        return [BfcClientServiceProvider::class, MatteClientServiceProvider::class];
     }
 }
