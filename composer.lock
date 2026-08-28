@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "611cb2461a4f29ea3ef63d7b024d920f",
+    "content-hash": "a871ebfeaacfe2a45e0c4aeacc9c2869",
     "packages": [
         {
             "name": "artisan-build/built-for-cloud",
-            "version": "v0.3.3",
+            "version": "v0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/built-for-cloud.git",
-                "reference": "7b7171e4dec68f6193b833ab97b774edcaae6a9f"
+                "reference": "7bacdb2bb536e4f6a87fa46e29d26c009fcbf1da"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/7b7171e4dec68f6193b833ab97b774edcaae6a9f",
-                "reference": "7b7171e4dec68f6193b833ab97b774edcaae6a9f",
+                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/7bacdb2bb536e4f6a87fa46e29d26c009fcbf1da",
+                "reference": "7bacdb2bb536e4f6a87fa46e29d26c009fcbf1da",
                 "shasum": ""
             },
             "require": {
@@ -62,9 +62,9 @@
             ],
             "support": {
                 "issues": "https://github.com/artisan-build/built-for-cloud/issues",
-                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.3.3"
+                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.4.0"
             },
-            "time": "2026-08-21T12:46:26+00:00"
+            "time": "2026-08-24T11:35:08+00:00"
         },
         {
             "name": "artisan-build/matte-contracts",
@@ -123,10 +123,10 @@
             "dist": {
                 "type": "path",
                 "url": "packages/matte-server",
-                "reference": "d133060990bcd7f0d9947a99ea96facaaf95f540"
+                "reference": "5bbbaad0d64b925c1171b09c4a78d1d5dbf7c9f0"
             },
             "require": {
-                "artisan-build/built-for-cloud": "^0.3",
+                "artisan-build/built-for-cloud": "^0.4",
                 "artisan-build/matte-contracts": "^2.0",
                 "illuminate/contracts": "^13.0",
                 "illuminate/support": "^13.0",
