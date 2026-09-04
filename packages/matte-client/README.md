@@ -4,6 +4,8 @@ The **send side** of [Matte](https://github.com/artisan-build/matte) — **self-
 image background removal on Laravel Cloud.** Install it in any Laravel app to call your
 self-hosted Matte server with one line: `Matte::remove($image)`.
 
+Use the [default integration guide](docs/integrate/default.md) when an agent is installing or migrating to this client.
+
 > **Read-only mirror.** This repository is a read-only split of the
 > [`artisan-build/matte`](https://github.com/artisan-build/matte) monorepo. Issues and pull
 > requests are disabled here — please open them on the monorepo.
