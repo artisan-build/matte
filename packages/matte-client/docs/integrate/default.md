@@ -29,6 +29,11 @@ the integration needs their behavior.
 | --- | --- | --- |
 | `MATTE_URL` | Base URL of the Matte server. | The Scalpels connection flow or the Matte operator. |
 | `MATTE_TOKEN` | Bearer credential sent to the Matte server. | The Scalpels connection flow or Matte operator. Treat it as a secret. |
+| `MATTE_CALLBACK_PATH` | Local path for the package-bound callback receiver. Defaults to `matte/callback`. | Keep the default or choose a stable local route. |
+| `MATTE_CALLBACK_SUBJECT_REF` | Installation automation routing identity in the callback scope. | The reviewed callback registration. |
+| `MATTE_CALLBACK_INSTALLATION` | Installation reference in the callback scope. | The reviewed callback registration. |
+| `MATTE_CALLBACK_APPLICATION` | Application reference in the callback scope. | The reviewed callback registration. |
+| `MATTE_CALLBACK_AUDIENCE` | This receiver's exact callback audience. | The reviewed callback registration. |
 | `MATTE_STORE_DISK` | Laravel filesystem disk where `AwaitRemovalJob` writes `matte/<job-id>.png`. | A disk name from the consuming app's filesystem config. Leave unset to skip local persistence. |
 | `MATTE_DEFAULT_MODE` | Default removal mode. The client config defaults to `ml`; valid values are `ml` and `grabcut`. | Choose based on the deployed server's engine and model. |
 | `MATTE_DEFAULT_PRESET` | Default processing preset. Defaults to `balanced`; valid values are `fast`, `balanced`, and `quality`. | Choose for the application's workload. |
@@ -72,7 +77,7 @@ The facade exposes these calls:
 
 | Call | Request | Return |
 | --- | --- | --- |
-| `Matte::remove($image, $options = [])` | One image and options. | `JobHandle`; the server response is a `202` status envelope and the handle retains its `job_id`. |
+| `Matte::remove($image, $options = [], $callbackUrl = null)` | One image, options, and an optional registered callback destination identifier. The compatibility parameter name does not accept a URL. | `JobHandle`; the server response is a `202` status envelope and the handle retains its `job_id`. |
 | `Matte::removeSync($image, $options = [])` | One image and options. | Raw transparent PNG bytes as a string after a `200` response. |
 | `Matte::status($jobId)` | Job ID string. | `JobStatusEnvelope` with `jobId`, `status`, optional `outputRef`, optional `error`, and `envelopeVersion`. |
 | `Matte::result($jobId)` | Completed job ID string. | Raw transparent PNG bytes as a string after a `200` response. |
@@ -127,8 +132,11 @@ platform features.
   catches polling and result exceptions, emits a failed `MatteRemovalCompleted`, and does not rethrow.
 - `AwaitRemovalJob` sets event `path` to a local `MATTE_STORE_DISK` path when configured. Fetch by
   `jobId` when the integration needs a consistent source of PNG bytes.
-- Callback submission is unsupported until the Built for Cloud callback contract planned for v0.13.0.
-  The existing receiver/verifier classes are dormant v0.13.0 residue, not a supported integration path.
+- Callback delivery is opt-in by registered destination identifier. The Matte server and receiver must
+  derive the same `matte.callback` scope from reviewed configuration. Install claim delivery through
+  `InstallCallbackCredential` with a trusted `HmacCredentialIssuerClient`; Built for Cloud owns secret
+  encryption, bound verification, replay refusal, rotation cutover, and key storage. Revoke the source
+  and receiver copies independently when retiring a callback credential.
 - The server validates uploads with Laravel 13's `image` rule: JPG/JPEG, PNG, GIF, BMP, WebP, AVIF,
   HEIC, and HEIF are accepted; SVG is not enabled. Matte declares no explicit upload byte or dimension
   limit and accepts one image per call.

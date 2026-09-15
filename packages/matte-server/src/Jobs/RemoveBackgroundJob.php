@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteServer\Jobs;
 
+use ArtisanBuild\BuiltForCloud\Hmac\HmacEnvelope;
+use ArtisanBuild\BuiltForCloud\Hmac\HmacSigner;
 use ArtisanBuild\MatteContracts\JobStatus;
+use ArtisanBuild\MatteContracts\JobStatusEnvelope;
 use ArtisanBuild\MatteContracts\RemovalOptions;
+use ArtisanBuild\MatteServer\CallbackDestination;
 use ArtisanBuild\MatteServer\Converter;
 use ArtisanBuild\MatteServer\Exceptions\ConversionFailed;
 use ArtisanBuild\MatteServer\MatteJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 final class RemoveBackgroundJob implements ShouldQueue
 {
@@ -23,6 +29,7 @@ final class RemoveBackgroundJob implements ShouldQueue
         public string $diskName,
         public string $inputRef,
         public string $outputKey,
+        public ?string $callbackDestination = null,
     ) {
         $this->connection = config('matte-server.queue');
     }
@@ -55,6 +62,48 @@ final class RemoveBackgroundJob implements ShouldQueue
         } finally {
             @unlink($inputTemp);
             @unlink($outputTemp);
+        }
+
+        $this->deliverCallback($matteJob->refresh());
+    }
+
+    private function deliverCallback(MatteJob $matteJob): void
+    {
+        if ($this->callbackDestination === null) {
+            return;
+        }
+
+        try {
+            $destination = CallbackDestination::resolve($this->callbackDestination);
+
+            if ($destination === null) {
+                return;
+            }
+
+            $body = JobStatusEnvelope::make(
+                $matteJob->id,
+                $matteJob->status,
+                $matteJob->output_ref,
+                $matteJob->error,
+            )->toJson();
+            $signature = app(HmacSigner::class)->signBound(
+                $destination->scope,
+                $body,
+                'matte.removal.completed',
+            );
+
+            Http::timeout(max(1, (int) config('matte-server.callback.timeout', 5)))
+                ->connectTimeout(max(1, (int) config('matte-server.callback.connect_timeout', 2)))
+                ->withHeader(HmacEnvelope::HEADER, $signature)
+                ->withBody($body, 'application/json')
+                ->post($destination->url)
+                ->throw();
+        } catch (Throwable $exception) {
+            try {
+                report($exception);
+            } catch (Throwable) {
+                // Callback delivery and its observability are both best effort.
+            }
         }
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteClient;
 
+use ArtisanBuild\BuiltForCloud\CredentialPurpose;
 use ArtisanBuild\MatteClient\Commands\InstallCommand;
 use ArtisanBuild\MatteClient\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,7 @@ final class MatteClientServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/matte.php', 'matte');
+        $this->registerCallbackPurpose();
 
         $this->app->singleton(MatteClient::class, fn (): MatteClient => new MatteClient(
             url: config('matte.url'),
@@ -35,9 +37,25 @@ final class MatteClientServiceProvider extends ServiceProvider
             ]);
         }
 
-        // v0.13.0 residue: the receiver/verifier remains dormant unless explicitly configured.
-        if (($path = config('matte.webhook_path')) !== null && $path !== '') {
-            Route::post($path, WebhookController::class)->name('matte.webhook');
+        if (($path = config('matte.callback.path')) !== null && $path !== '') {
+            Route::post($path, WebhookController::class)->name('matte.callback');
         }
+    }
+
+    private function registerCallbackPurpose(): void
+    {
+        $purposes = config('built-for-cloud.credentials.app_purposes', []);
+        $purposes = is_array($purposes) ? $purposes : [];
+        $purposes[CallbackScope::APP_PURPOSE] = CredentialPurpose::Signing->value;
+        config()->set('built-for-cloud.credentials.app_purposes', $purposes);
+
+        $credentialPurposes = config('built-for-cloud.ui.credential_purposes', []);
+        $credentialPurposes = is_array($credentialPurposes) ? $credentialPurposes : [];
+
+        if (! in_array(CallbackScope::APP_PURPOSE, $credentialPurposes, true)) {
+            $credentialPurposes[] = CallbackScope::APP_PURPOSE;
+        }
+
+        config()->set('built-for-cloud.ui.credential_purposes', $credentialPurposes);
     }
 }

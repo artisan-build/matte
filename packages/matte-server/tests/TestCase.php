@@ -35,12 +35,18 @@ abstract class TestCase extends Orchestra
      */
     protected function getEnvironmentSetUp($app): void
     {
+        $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('matte-server-key', 2)));
         $app['config']->set('auth.providers.users', [
             'driver' => 'eloquent',
             'model' => User::class,
         ]);
         $app['config']->set('built-for-cloud.credentials.app_purposes', [
             'matte.remove' => CredentialPurpose::Consumption->value,
+            'matte.callback' => CredentialPurpose::Signing->value,
+        ]);
+        $app['config']->set('built-for-cloud.ui.credential_purposes', [
+            'matte.remove',
+            'matte.callback',
         ]);
     }
 }

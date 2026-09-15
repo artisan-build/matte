@@ -48,10 +48,15 @@ the declared `matte.remove` consumption purpose.
 
 **Options** (form fields on submit): `mode` (`grabcut` \| `ml`), `preset` (`fast` \| `balanced`
 \| `quality`), `model`, `edge_mode` (`blur` \| `bilateral` \| `guided`), `iterations`,
-`margin`, plus optional `idempotency_key`. A non-empty `callback_url` is rejected until the package
-callback contract planned for v0.13.0 is available; async clients must poll status and result.
+`margin`, plus optional `idempotency_key`. Async callers may pass `callback_destination`, but its value
+must be a key registered in `matte-server.callback.destinations`; `callback_url` and arbitrary URLs are
+always rejected.
 
-The executable server flow does not dispatch completion callbacks.
+Each registered destination contains its reviewed URL and exact callback scope: `subject_ref`,
+`installation`, `application`, and `audience`. Matte re-resolves that trusted configuration after the
+job reaches a durable terminal state, signs the exact `JobStatusEnvelope` JSON with Built for Cloud's
+bound `matte.callback` HMAC credential, and delivers it with explicit HTTP timeouts. Delivery is best
+effort and cannot change the terminal conversion state.
 
 ## Console commands
 
@@ -81,6 +86,7 @@ Env vars (all `MATTE_*` keys live in `config/matte-server.php`):
 | `MATTE_RUNTIME_PATH` | Optional override for where the binary is provisioned. Defaults to `base_path('runtime')` — a location inside the deploy artifact, so the build-provisioned binary ships to every instance. |
 | `MATTE_BG_REMOVER_TAG` | Pinned `bg-remover` release (default `v0.7.1`). |
 | `MATTE_QUEUE_CONNECTION` | Queue for the removal job. Leave unset to use the app default (the managed queue). |
+| `MATTE_CALLBACK_TIMEOUT`, `MATTE_CALLBACK_CONNECT_TIMEOUT` | Total and connection timeout for best-effort registered callback delivery. |
 | `MATTE_DEFAULT_MODE`, `MATTE_TIMEOUT`, `MATTE_MODEL_NAME`, `MATTE_MODEL_URL`, `MATTE_ROUTE_PREFIX` | Defaults / tuning. |
 
 ## Installation

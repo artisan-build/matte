@@ -18,6 +18,7 @@ use ArtisanBuild\MatteContracts\JobStatus;
 use ArtisanBuild\MatteContracts\JobStatusEnvelope;
 use ArtisanBuild\MatteContracts\Protocol;
 use ArtisanBuild\MatteContracts\RemovalOptions;
+use ArtisanBuild\MatteServer\CallbackDestination;
 use ArtisanBuild\MatteServer\Converter;
 use ArtisanBuild\MatteServer\Exceptions\ConversionFailed;
 use ArtisanBuild\MatteServer\Jobs\RemoveBackgroundJob;
@@ -48,6 +49,7 @@ final class RemoveController extends Controller
         try {
             $this->assertSupportedEnvelopeVersion($request);
             $this->validateImage($request);
+            $callbackDestination = $this->callbackDestination($request);
             $options = $this->removalOptions($request);
             $bytes = $this->uploadedBytes($request);
         } catch (InvalidEnvelope $exception) {
@@ -78,6 +80,7 @@ final class RemoveController extends Controller
             $diskName,
             $inputRef,
             $outputKey,
+            $callbackDestination,
         );
 
         return response()->json(JobStatusEnvelope::make($matteJob->id, JobStatus::Queued)->toArray(), 202);
@@ -149,12 +152,34 @@ final class RemoveController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'callback_url' => ['prohibited'],
+            'callback_destination' => ['nullable', 'string'],
             'image' => ['required', 'image'],
         ]);
 
         if ($validator->fails()) {
             throw new InvalidEnvelope($validator->errors()->first() ?: 'The request is invalid.');
         }
+    }
+
+    private function callbackDestination(Request $request): ?string
+    {
+        $identifier = $request->input('callback_destination');
+
+        if ($identifier === null || $identifier === '') {
+            return null;
+        }
+
+        if (! is_string($identifier)
+            || preg_match('/\A[a-zA-Z0-9][a-zA-Z0-9._-]{0,254}\z/D', $identifier) !== 1
+            || CallbackDestination::resolve($identifier) === null) {
+            throw new InvalidEnvelope('The selected callback destination is invalid.');
+        }
+
+        if ($request->boolean('sync')) {
+            throw new InvalidEnvelope('Callback destinations are supported only for asynchronous removals.');
+        }
+
+        return $identifier;
     }
 
     private function admit(Request $request): bool
