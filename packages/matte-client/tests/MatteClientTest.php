@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use ArtisanBuild\MatteClient\Events\MatteRemovalCompleted;
+use ArtisanBuild\MatteClient\Exceptions\MatteException;
 use ArtisanBuild\MatteClient\Facades\Matte;
 use ArtisanBuild\MatteClient\Http\Controllers\WebhookController;
 use ArtisanBuild\MatteClient\JobHandle;
@@ -40,7 +41,28 @@ it('submits an async removal request with bearer token and multipart fields', fu
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://matte.example/v1/remove'
         && $request->hasHeader('Authorization', 'Bearer secret-token')
         && $request->hasFile('image', 'image-bytes', basename($path))
+        && ! collect($request->data())->contains(fn (array $part): bool => ($part['name'] ?? null) === 'callback_url')
         && collect($request->data())->contains(fn (array $part): bool => ($part['name'] ?? null) === 'mode' && ($part['contents'] ?? null) === 'grabcut'));
+});
+
+it('rejects a positional callback URL before sending a request', function (): void {
+    Http::fake();
+
+    expect(fn (): JobHandle => Matte::remove('raw-image-bytes', [], 'https://consumer.example/callback'))
+        ->toThrow(MatteException::class, 'Callback URLs are not supported by this Matte client version.');
+
+    Http::assertNothingSent();
+});
+
+it('rejects a named callback URL before sending a request', function (): void {
+    Http::fake();
+
+    expect(fn (): JobHandle => Matte::remove(
+        image: 'raw-image-bytes',
+        callbackUrl: 'https://consumer.example/callback',
+    ))->toThrow(MatteException::class, 'Callback URLs are not supported by this Matte client version.');
+
+    Http::assertNothingSent();
 });
 
 it('waits for completion and fetches the result bytes', function (): void {
@@ -65,7 +87,7 @@ it('submits a sync removal request and returns png bytes', function (): void {
     expect(Matte::removeSync('raw-image-bytes'))->toBe('png-bytes');
 });
 
-it('accepts signed webhooks and rejects bad signatures', function (): void {
+it('retains the v0.13.0 callback receiver residue with signature verification', function (): void {
     Event::fake();
     config()->set('matte.webhook_path', 'matte/webhook');
     config()->set('matte.webhook_secret', 'webhook-secret');

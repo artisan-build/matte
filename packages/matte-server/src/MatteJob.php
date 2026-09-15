@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property string $id
- * @property string|null $token_id
  * @property string $input_ref
  * @property string|null $output_ref
  * @property string $mode
@@ -23,7 +22,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class MatteJob extends Model
 {
+    /** @use HasFactory<MatteJobFactory> */
     use HasFactory;
+
     use HasUuids;
 
     public $incrementing = false;
@@ -32,7 +33,6 @@ final class MatteJob extends Model
 
     protected $fillable = [
         'id',
-        'token_id',
         'input_ref',
         'output_ref',
         'mode',

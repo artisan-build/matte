@@ -30,14 +30,15 @@ operate but a normal Laravel Cloud app.
   the worker is healthy.
 
 The full pipeline lives inside one managed app: **ingest → object storage → managed queue →
-worker runs the binary → transparent PNG → status/webhook.** Object storage and the database
+worker runs the binary → transparent PNG → status/result.** Object storage and the database
 are Cloud-managed resources; nothing else is required.
 
 ## The HTTP API
 
-All routes are token-authenticated with a `Bearer` token, resolved against the hashed `api_tokens`
-table (managed by [`artisan-build/built-for-cloud`](https://github.com/artisan-build/built-for-cloud))
-or the `FALLBACK_TOKEN` environment variable.
+All product routes use package-owned bearer authentication from
+[`artisan-build/built-for-cloud`](https://github.com/artisan-build/built-for-cloud). They accept
+account-bound Owner, Admin, and Member credentials or installation-owned automation credentials with
+the declared `matte.remove` consumption purpose.
 
 | Method & path | Purpose |
 | --- | --- |
@@ -47,11 +48,10 @@ or the `FALLBACK_TOKEN` environment variable.
 
 **Options** (form fields on submit): `mode` (`grabcut` \| `ml`), `preset` (`fast` \| `balanced`
 \| `quality`), `model`, `edge_mode` (`blur` \| `bilateral` \| `guided`), `iterations`,
-`margin`, plus optional `idempotency_key` and `callback_url`.
+`margin`, plus optional `idempotency_key`. A non-empty `callback_url` is rejected until the package
+callback contract planned for v0.13.0 is available; async clients must poll status and result.
 
-**Completion webhook.** If a `callback_url` is supplied and `MATTE_WEBHOOK_SECRET` is set, the
-worker POSTs `{job_id, status, output_ref, error}` with an `X-Matte-Signature: sha256=<hmac>`
-header (HMAC-SHA256 over the exact body) so the receiver can verify authenticity.
+The executable server flow does not dispatch completion callbacks.
 
 ## Console commands
 
@@ -61,9 +61,15 @@ header (HMAC-SHA256 over the exact body) so the receiver can verify authenticity
 | `matte:doctor` | Verify the binary runtime and run a real conversion. |
 | `matte:remove <path>` | Synchronous CLI conversion (no queue) — the local eyeball loop. |
 
-API tokens are managed by the `token:*` commands from
-[`artisan-build/built-for-cloud`](https://github.com/artisan-build/built-for-cloud)
-(`token:create`, `token:rotate`, `token:revoke`, `token:list`, `token:usage`).
+Credentials are managed by the package-owned `bfc:credential:*` commands. Run state-changing
+commands with `--local` inside the intended environment. For example:
+
+```shell
+php artisan bfc:credential:mint installation '<consumer-installation-ref>' --kind=bearer --purpose=consumption --name='matte-<app-id>' --local
+php artisan bfc:credential:list --local
+php artisan bfc:credential:rotate <credential-id> --local
+php artisan bfc:credential:revoke <credential-id> --local
+```
 
 ## Configuration
 
@@ -71,12 +77,10 @@ Env vars (all `MATTE_*` keys live in `config/matte-server.php`):
 
 | Key | Meaning |
 | --- | --- |
-| `FALLBACK_TOKEN` | Optional single bootstrap/fallback API token (plaintext). Delete it and use per-app `api_tokens` for production workloads. |
 | `MATTE_DISK` | Storage disk for originals + outputs. Defaults to `FILESYSTEM_DISK` (the bucket Cloud injects), then `local`. |
 | `MATTE_RUNTIME_PATH` | Optional override for where the binary is provisioned. Defaults to `base_path('runtime')` — a location inside the deploy artifact, so the build-provisioned binary ships to every instance. |
 | `MATTE_BG_REMOVER_TAG` | Pinned `bg-remover` release (default `v0.7.1`). |
 | `MATTE_QUEUE_CONNECTION` | Queue for the removal job. Leave unset to use the app default (the managed queue). |
-| `MATTE_WEBHOOK_SECRET` | HMAC secret for signing completion webhooks. |
 | `MATTE_DEFAULT_MODE`, `MATTE_TIMEOUT`, `MATTE_MODEL_NAME`, `MATTE_MODEL_URL`, `MATTE_ROUTE_PREFIX` | Defaults / tuning. |
 
 ## Installation

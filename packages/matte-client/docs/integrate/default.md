@@ -28,9 +28,7 @@ the integration needs their behavior.
 | Key | Purpose | Source of value |
 | --- | --- | --- |
 | `MATTE_URL` | Base URL of the Matte server. | The Scalpels connection flow or the Matte operator. |
-| `MATTE_TOKEN` | Bearer credential sent to the Matte server. | The Scalpels connection flow or Matte's token CLI. Treat it as a secret. |
-| `MATTE_WEBHOOK_SECRET` | Verifies `X-Matte-Signature` on completion webhooks. | The Matte operator; it must equal the server's webhook-signing secret. Treat it as a secret. |
-| `MATTE_WEBHOOK_PATH` | Registers the consuming app's named `matte.webhook` POST route, for example `matte/webhook`. | Choose a public path in the consuming app. Leave unset to register no receiver. |
+| `MATTE_TOKEN` | Bearer credential sent to the Matte server. | The Scalpels connection flow or Matte operator. Treat it as a secret. |
 | `MATTE_STORE_DISK` | Laravel filesystem disk where `AwaitRemovalJob` writes `matte/<job-id>.png`. | A disk name from the consuming app's filesystem config. Leave unset to skip local persistence. |
 | `MATTE_DEFAULT_MODE` | Default removal mode. The client config defaults to `ml`; valid values are `ml` and `grabcut`. | Choose based on the deployed server's engine and model. |
 | `MATTE_DEFAULT_PRESET` | Default processing preset. Defaults to `balanced`; valid values are `fast`, `balanced`, and `quality`. | Choose for the application's workload. |
@@ -44,8 +42,14 @@ target returned by its site-listing tools. Confirm the target site with the user
 Scalpels writes the Matte URL and credential into the target environment; the credential is never
 returned to the agent.
 
-For any other host, have the Matte operator issue a per-app credential through the `token:create`
-CLI in the intended Matte server environment, then place it directly in the
+For any other host, have the Matte operator issue an installation-owned consumption credential in
+the intended Matte server environment:
+
+```shell
+php artisan bfc:credential:mint installation '<consumer-installation-ref>' --kind=bearer --purpose=consumption --name='matte-<app-id>' --local
+```
+
+Place the reveal-once plaintext directly in the
 consuming host's secret/environment manager. Do not ask anyone to paste the plaintext credential into
 chat, commit it, include it in a tool result, or write it to a tracked file. Run `matte:install` only
 in an operator-controlled terminal if its secret prompts are appropriate for that environment.
@@ -68,8 +72,8 @@ The facade exposes these calls:
 
 | Call | Request | Return |
 | --- | --- | --- |
-| `Matte::remove($image, $options = [], $callbackUrl = null)` | One image, options, and an optional completion URL. | `JobHandle`; the server response is a `202` status envelope and the handle retains its `job_id`. |
-| `Matte::removeSync($image, $options = [])` | One image and options; no callback URL. | Raw transparent PNG bytes as a string after a `200` response. |
+| `Matte::remove($image, $options = [])` | One image and options. | `JobHandle`; the server response is a `202` status envelope and the handle retains its `job_id`. |
+| `Matte::removeSync($image, $options = [])` | One image and options. | Raw transparent PNG bytes as a string after a `200` response. |
 | `Matte::status($jobId)` | Job ID string. | `JobStatusEnvelope` with `jobId`, `status`, optional `outputRef`, optional `error`, and `envelopeVersion`. |
 | `Matte::result($jobId)` | Completed job ID string. | Raw transparent PNG bytes as a string after a `200` response. |
 
@@ -102,17 +106,6 @@ $png = $handle->result();        // waits, then returns PNG bytes
 The resolved `MatteClient` also exposes `status($jobId)` and `result($jobId)`, which back the facade,
 plus `pollInterval(): int` and `pollTimeout(): int` for the effective polling settings.
 
-For a signed webhook, configure `MATTE_WEBHOOK_PATH` and `MATTE_WEBHOOK_SECRET`, then pass the named
-route as the callback URL:
-
-```php
-$handle = Matte::remove(
-    $request->file('photo'),
-    ['mode' => 'ml'],
-    route('matte.webhook'),
-);
-```
-
 When the completion event reports `done`, fetch the bytes with `Matte::result($event->jobId)`.
 
 Map only the incumbent's background-removal operation. Matte has no equivalent for unrelated media
@@ -132,12 +125,10 @@ platform features.
   status `200`. Use it only when blocking the request for the conversion is acceptable.
 - The polling helper blocks its queue worker while `JobHandle::wait()` sleeps. `AwaitRemovalJob`
   catches polling and result exceptions, emits a failed `MatteRemovalCompleted`, and does not rethrow.
-- Webhook delivery is signed with HMAC-SHA256 but is best effort on the server. The client rejects a
-  missing secret with `403`, a bad or missing signature with `401`, and malformed payloads with `400`.
-  The receiver emits an event; it does not fetch the PNG.
-- Event `path` is flow-dependent. `AwaitRemovalJob` sets it to a local `MATTE_STORE_DISK` path when
-  configured. The webhook receiver sets it to the server's `output_ref`. Fetch by `jobId` when the
-  integration needs a consistent source of PNG bytes.
+- `AwaitRemovalJob` sets event `path` to a local `MATTE_STORE_DISK` path when configured. Fetch by
+  `jobId` when the integration needs a consistent source of PNG bytes.
+- Callback submission is unsupported until the Built for Cloud callback contract planned for v0.13.0.
+  The existing receiver/verifier classes are dormant v0.13.0 residue, not a supported integration path.
 - The server validates uploads with Laravel 13's `image` rule: JPG/JPEG, PNG, GIF, BMP, WebP, AVIF,
   HEIC, and HEIF are accepted; SVG is not enabled. Matte declares no explicit upload byte or dimension
   limit and accepts one image per call.

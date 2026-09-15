@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteServer;
 
-use ArtisanBuild\BuiltForCloud\Contracts\UsageReporter;
 use ArtisanBuild\MatteServer\Commands\DoctorCommand;
 use ArtisanBuild\MatteServer\Commands\ProvisionBinaryCommand;
 use ArtisanBuild\MatteServer\Commands\RemoveCommand;
@@ -23,8 +22,6 @@ final class MatteServerServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->app->singleton(UsageReporter::class, MatteJobUsageReporter::class);
-
         Route::prefix((string) config('matte-server.route_prefix', ''))
             ->group(__DIR__.'/../routes/matte-server.php');
 

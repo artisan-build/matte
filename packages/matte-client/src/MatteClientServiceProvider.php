@@ -35,6 +35,7 @@ final class MatteClientServiceProvider extends ServiceProvider
             ]);
         }
 
+        // v0.13.0 residue: the receiver/verifier remains dormant unless explicitly configured.
         if (($path = config('matte.webhook_path')) !== null && $path !== '') {
             Route::post($path, WebhookController::class)->name('matte.webhook');
         }

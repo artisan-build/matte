@@ -11,6 +11,9 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Event;
 use JsonException;
 
+/**
+ * Dormant v0.13.0 callback receiver/verifier residue.
+ */
 final class WebhookController
 {
     public function __invoke(Request $request): Response
