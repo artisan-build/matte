@@ -24,11 +24,7 @@ final readonly class MatteClient
      */
     public function remove(mixed $image, array $options = [], ?string $callbackUrl = null): JobHandle
     {
-        if ($callbackUrl !== null) {
-            throw new MatteException('Callback URLs are not supported by this Matte client version.');
-        }
-
-        $payload = $this->postRemove($image, $options, sync: false);
+        $payload = $this->postRemove($image, $options, sync: false, callbackDestination: $callbackUrl);
 
         if ($payload->status() !== 202) {
             throw MatteException::unexpectedResponse($payload->status(), $payload->body());
@@ -102,10 +98,14 @@ final readonly class MatteClient
     /**
      * @param  array<string, mixed>  $options
      */
-    private function postRemove(mixed $image, array $options, bool $sync): Response
+    private function postRemove(mixed $image, array $options, bool $sync, ?string $callbackDestination = null): Response
     {
         $normalizedImage = $this->normalizeImage($image);
         $fields = $this->options($options)->toArray();
+
+        if ($callbackDestination !== null) {
+            $fields['callback_destination'] = $callbackDestination;
+        }
 
         $url = $this->endpoint('/v1/remove').($sync ? '?sync=1' : '');
 

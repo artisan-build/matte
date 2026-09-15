@@ -17,6 +17,7 @@ return [
         'session_guard' => null,
         'app_purposes' => [
             'matte.remove' => 'consumption',
+            'matte.callback' => 'signing',
         ],
     ],
 
@@ -27,6 +28,6 @@ return [
         'installation_credentials' => false,
         'session_management' => false,
         'managed_transitions' => false,
-        'credential_purposes' => ['matte.remove'],
+        'credential_purposes' => ['matte.remove', 'matte.callback'],
     ],
 ];

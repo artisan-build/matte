@@ -73,7 +73,7 @@ it('passes Built for Cloud fleet conformance', function (): void {
             'path:Bearer|ArtisanBuild\BuiltForCloud\Auth\BearerAuthenticator',
             'path:HMAC|Http\Middleware\VerifyHmacSignature+Hmac\HmacVerifier',
             'path:MCP|Http\Middleware\AuthenticateMcp:store-bearer+v4.public',
-            'path:asymmetric|Actions\MintCredential::mintEnrollment',
+            'path:asymmetric|Actions\MintCredential::mintEnrollment+CompleteAsymmetricEnrollment+AsymmetricVerificationKeys',
             'path:enrollment|OnboardingToken+POST:/bfc/claim,/bfc/onboarding/issue,/exchange,/verify',
             'path:system|SubjectType::Operator/Application/Installation+AuditActorType::CliOperator',
         ]),
@@ -135,7 +135,10 @@ it('passes Built for Cloud fleet conformance', function (): void {
         providerFiles: $providerFiles,
         runtimeAssertions: ['auth_schema', 'credential_listing', 'meta', 'transport_parity'],
         capabilities: ['credentials', 'tokens'],
-        purposeMappings: ['matte.remove' => CredentialPurpose::Consumption],
+        purposeMappings: [
+            'matte.callback' => CredentialPurpose::Signing,
+            'matte.remove' => CredentialPurpose::Consumption,
+        ],
         mcpServer: null,
         expected: $expected,
     ));

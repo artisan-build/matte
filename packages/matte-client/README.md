@@ -22,6 +22,9 @@ just makes the common Laravel case ergonomic.
   interactive cases.
 - **`JobHandle`** → `status()`, `wait($timeout)` (polls to done/failed/timeout), `result()`
   (fetches the PNG).
+- **Registered callbacks** → pass a server-registered destination identifier as the third `remove()`
+  argument. The historical parameter name remains `$callbackUrl` for source compatibility, but values
+  are identifiers, never URLs.
 
 It speaks the [`matte-contracts`](https://github.com/artisan-build/matte-contracts) wire
 protocol and authenticates with a `Bearer` token.
@@ -65,8 +68,12 @@ On the Matte server, mint the credential with:
 php artisan bfc:credential:mint installation '<consumer-installation-ref>' --kind=bearer --purpose=consumption --name='matte-<app-id>' --local
 ```
 
-The existing webhook receiver/verifier classes are explicitly retained as dormant v0.13.0 residue.
-Callback submission is unsupported in this release, and the server rejects non-empty callback URLs.
+The client mounts `POST /matte/callback` by default. Configure its exact installation-bound callback
+scope, register the matching destination on the Matte server, and install the delivered verification
+credential with `InstallCallbackCredential`. That action requires a trusted Built for Cloud
+`HmacCredentialIssuerClient` and delegates storage to `InstallHmacCredentialFromClaim`; no callback
+secret belongs in Matte config. The receiver dispatches `MatteRemovalCompleted` only after Built for
+Cloud verifies the bound signature and Matte validates the completion envelope.
 
 ## License
 

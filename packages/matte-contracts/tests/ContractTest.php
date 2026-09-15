@@ -23,7 +23,7 @@ it('round-trips removal requests through arrays and json', function (): void {
             margin: 8,
         ),
         idempotencyKey: 'idem-123',
-        callbackUrl: 'https://example.com/callback',
+        callbackUrl: 'legacy-destination',
     );
 
     $fromArray = RemovalRequest::fromArray($request->toArray());

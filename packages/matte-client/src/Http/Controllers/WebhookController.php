@@ -4,55 +4,60 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteClient\Http\Controllers;
 
+use ArtisanBuild\BuiltForCloud\Exceptions\HmacKeyUnreadable;
+use ArtisanBuild\BuiltForCloud\Exceptions\HmacVerificationFailed;
+use ArtisanBuild\BuiltForCloud\Hmac\HmacEnvelope;
+use ArtisanBuild\BuiltForCloud\Hmac\HmacVerifier;
+use ArtisanBuild\MatteClient\CallbackScope;
 use ArtisanBuild\MatteClient\Events\MatteRemovalCompleted;
+use ArtisanBuild\MatteContracts\Exceptions\InvalidEnvelope;
 use ArtisanBuild\MatteContracts\JobStatus;
+use ArtisanBuild\MatteContracts\JobStatusEnvelope;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Event;
-use JsonException;
+use RuntimeException;
 
-/**
- * Dormant v0.13.0 callback receiver/verifier residue.
- */
 final class WebhookController
 {
+    public function __construct(
+        private readonly HmacVerifier $verifier,
+        private readonly CallbackScope $scope,
+    ) {}
+
     public function __invoke(Request $request): Response
     {
-        $secret = config('matte.webhook_secret');
-
-        if (! is_string($secret) || $secret === '') {
-            return response(status: 403);
-        }
-
         $raw = $request->getContent();
-        $signature = $request->header('X-Matte-Signature');
-        $expected = 'sha256='.hash_hmac('sha256', $raw, $secret);
+        $signature = $request->header(HmacEnvelope::HEADER);
 
-        if (! is_string($signature) || ! hash_equals($expected, $signature)) {
+        if (! is_string($signature) || $signature === '') {
             return response(status: 401);
         }
 
         try {
-            $payload = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
+            $this->verifier->verifyBound($this->scope->resolve(), $signature, $raw);
+        } catch (HmacVerificationFailed|HmacKeyUnreadable|DecryptException) {
+            return response(status: 401);
+        } catch (RuntimeException) {
+            return response(status: 503);
+        }
+
+        try {
+            $payload = JobStatusEnvelope::fromJson($raw);
+        } catch (InvalidEnvelope) {
             return response(status: 400);
         }
 
-        if (! is_array($payload) || ! is_string($payload['job_id'] ?? null) || ! is_string($payload['status'] ?? null)) {
-            return response(status: 400);
-        }
-
-        $status = JobStatus::tryFrom($payload['status']);
-
-        if ($status === null) {
+        if (! in_array($payload->status, [JobStatus::Done, JobStatus::Failed], true)) {
             return response(status: 400);
         }
 
         Event::dispatch(new MatteRemovalCompleted(
-            jobId: $payload['job_id'],
-            status: $status,
-            path: is_string($payload['output_ref'] ?? null) ? $payload['output_ref'] : null,
-            error: is_string($payload['error'] ?? null) ? $payload['error'] : null,
+            jobId: $payload->jobId,
+            status: $payload->status,
+            path: $payload->outputRef,
+            error: $payload->error,
         ));
 
         return response(status: 204);

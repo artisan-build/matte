@@ -2,10 +2,19 @@
 
 declare(strict_types=1);
 
+use ArtisanBuild\BuiltForCloud\Actions\ActivateCredential;
+use ArtisanBuild\BuiltForCloud\Actions\MintCredential;
+use ArtisanBuild\BuiltForCloud\CredentialKind;
+use ArtisanBuild\BuiltForCloud\CredentialPurpose;
+use ArtisanBuild\BuiltForCloud\Hmac\HmacEnvelope;
+use ArtisanBuild\BuiltForCloud\Hmac\HmacVerifier;
+use ArtisanBuild\BuiltForCloud\MintOptions;
+use ArtisanBuild\MatteContracts\JobStatusEnvelope;
 use ArtisanBuild\MatteContracts\Mode;
 use ArtisanBuild\MatteContracts\Preset;
 use ArtisanBuild\MatteContracts\RemovalOptions;
 use ArtisanBuild\MatteServer\BinaryLocator;
+use ArtisanBuild\MatteServer\CallbackDestination;
 use ArtisanBuild\MatteServer\Converter;
 use ArtisanBuild\MatteServer\Jobs\RemoveBackgroundJob;
 use ArtisanBuild\MatteServer\MatteJob;
@@ -57,9 +66,42 @@ it('processes a queued removal when host dependencies are available', function (
     }
 });
 
-it('cannot send a callback from the executable job flow', function (): void {
+it('sends the exact terminal body to a registered destination with a package-bound signature', function (): void {
     $this->artisan('migrate')->assertExitCode(0);
-    Http::fake();
+    config()->set('matte-server.callback.destinations.consumer-app', [
+        'url' => 'https://consumer.example/matte/callback',
+        'subject_ref' => 'consumer-routing-identity',
+        'installation' => 'consumer-installation',
+        'application' => 'consumer-application',
+        'audience' => 'consumer.example',
+    ]);
+    $destination = CallbackDestination::resolve('consumer-app');
+    expect($destination)->not->toBeNull();
+    $mint = app(MintCredential::class)(
+        $destination->scope->subject,
+        new MintOptions(
+            kind: CredentialKind::Hmac,
+            purpose: CredentialPurpose::Signing,
+            codeTtlSeconds: 3600,
+            boundScope: $destination->scope,
+        ),
+    );
+    $delivery = $this->postJson('/bfc/onboarding/exchange', [
+        'token' => $mint->secret?->reveal(),
+        'version' => 1,
+    ])->assertCreated();
+    app(ActivateCredential::class)(
+        (string) $delivery->json('credential_id'),
+        (string) $delivery->json('delivery_fingerprint'),
+    );
+    $sentRequest = null;
+    $sentOptions = null;
+    Http::fake(function ($request, array $options) use (&$sentRequest, &$sentOptions) {
+        $sentRequest = $request;
+        $sentOptions = $options;
+
+        return Http::response(status: 204);
+    });
     Process::fake([
         '*' => Process::result(exitCode: 1),
     ]);
@@ -76,14 +118,51 @@ it('cannot send a callback from the executable job flow', function (): void {
         'matte-test',
         $inputRef,
         'outputs/result.png',
+        'consumer-app',
     );
 
     $job->handle(new Converter(new BinaryLocator(PHP_OS_FAMILY, php_uname('m'))));
 
-    Http::assertNothingSent();
+    Http::assertSentCount(1);
+    expect($sentRequest)->not->toBeNull()
+        ->and($sentRequest->url())->toBe('https://consumer.example/matte/callback')
+        ->and($sentOptions['timeout'] ?? null)->toBe(5)
+        ->and($sentOptions['connect_timeout'] ?? null)->toBe(2);
+    $header = $sentRequest->header(HmacEnvelope::HEADER);
+    expect($header)->toHaveCount(1);
+    app(HmacVerifier::class)->verifyBound($destination->scope, $header[0], $sentRequest->body());
+    $payload = JobStatusEnvelope::fromJson($sentRequest->body());
     expect($matteJob->refresh()->status->value)->toBe('failed')
-        ->and((new ReflectionClass($job))->hasProperty('callbackUrl'))->toBeFalse()
-        ->and((new ReflectionClass($job))->hasMethod('notifyCallback'))->toBeFalse();
+        ->and($payload->jobId)->toBe($matteJob->id)
+        ->and($payload->status->value)->toBe('failed');
+});
+
+it('keeps the durable terminal state when callback signing is unavailable', function (): void {
+    $this->artisan('migrate')->assertExitCode(0);
+    config()->set('matte-server.callback.destinations.consumer-app', [
+        'url' => 'https://consumer.example/matte/callback',
+        'subject_ref' => 'consumer-routing-identity',
+        'installation' => 'consumer-installation',
+        'application' => 'consumer-application',
+        'audience' => 'consumer.example',
+    ]);
+    Http::fake();
+    Process::fake(['*' => Process::result(exitCode: 1)]);
+    Storage::fake('matte-test');
+    Storage::disk('matte-test')->put('inputs/input.png', 'image-bytes');
+    $matteJob = MatteJob::factory()->create(['input_ref' => 'inputs/input.png']);
+
+    (new RemoveBackgroundJob(
+        $matteJob->id,
+        new RemovalOptions(mode: Mode::Grabcut, preset: Preset::Fast),
+        'matte-test',
+        'inputs/input.png',
+        'outputs/result.png',
+        'consumer-app',
+    ))->handle(new Converter(new BinaryLocator(PHP_OS_FAMILY, php_uname('m'))));
+
+    expect($matteJob->refresh()->status->value)->toBe('failed');
+    Http::assertNothingSent();
 });
 
 function provisionBinaryForRemoveBackgroundJob(): int

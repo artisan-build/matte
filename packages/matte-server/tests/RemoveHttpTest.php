@@ -301,19 +301,51 @@ it('rejects unknown account roles before dispatch or usage', function (): void {
     expect($credential->credential->refresh()->last_used_at)->toBeNull();
 });
 
-it('rejects non-empty callbacks before storage or dispatch', function (): void {
+it('rejects legacy URLs and unknown callback destinations before storage or dispatch', function (array $callback, string $message): void {
     Queue::fake();
     Storage::fake('matte-test');
 
     $this->actingAsCredential($this->knownCredential)->postJson('/v1/remove', [
         'image' => UploadedFile::fake()->image('x.png'),
-        'callback_url' => 'https://example.test/callback',
+        ...$callback,
     ])->assertUnprocessable()
-        ->assertJsonFragment(['message' => 'The callback url field is prohibited.']);
+        ->assertExactJson(['message' => $message]);
 
     expect(MatteJob::query()->count())->toBe(0);
     Storage::disk('matte-test')->assertDirectoryEmpty('/');
     Queue::assertNothingPushed();
+})->with([
+    'legacy callback URL field' => [
+        ['callback_url' => 'https://consumer.example/callback'],
+        'The callback url field is prohibited.',
+    ],
+    'URL-shaped destination' => [
+        ['callback_destination' => 'https://consumer.example/callback'],
+        'The selected callback destination is invalid.',
+    ],
+    'unknown destination' => [
+        ['callback_destination' => 'unknown-consumer'],
+        'The selected callback destination is invalid.',
+    ],
+]);
+
+it('queues only a registered callback destination identifier', function (): void {
+    Queue::fake();
+    Storage::fake('matte-test');
+    config()->set('matte-server.callback.destinations.consumer-app', [
+        'url' => 'https://consumer.example/matte/callback',
+        'subject_ref' => 'consumer-routing-identity',
+        'installation' => 'consumer-installation',
+        'application' => 'consumer-application',
+        'audience' => 'consumer.example',
+    ]);
+
+    $this->actingAsCredential($this->knownCredential)->postJson('/v1/remove', [
+        'image' => UploadedFile::fake()->image('x.png'),
+        'callback_destination' => 'consumer-app',
+    ])->assertStatus(202);
+
+    Queue::assertPushed(RemoveBackgroundJob::class, fn (RemoveBackgroundJob $job): bool => $job->callbackDestination === 'consumer-app');
 });
 
 it('preserves request validation and deterministic status and result responses', function (): void {

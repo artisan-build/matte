@@ -46,7 +46,7 @@ options/metadata beside it.
 | `options.mode` | `ml` or `grabcut`. |
 | `options.preset` | `fast` \| `balanced` \| `quality`. |
 | `options.model` / `edge_mode` / `iterations` / `margin` | Optional tuning. |
-| `idempotency_key` / `callback_url` | Optional. |
+| `idempotency_key` / `callback_url` | Optional. `callback_url` is retained as a legacy data field; supported clients select registered callbacks through the additive `callback_destination` HTTP field instead. |
 
 **Status** (`GET /v1/jobs/{id}`):
 
