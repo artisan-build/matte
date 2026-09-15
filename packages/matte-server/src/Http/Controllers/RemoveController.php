@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteServer\Http\Controllers;
 
-use ArtisanBuild\BuiltForCloud\TokenRegistry;
+use ArtisanBuild\BuiltForCloud\AppPurposeRegistry;
+use ArtisanBuild\BuiltForCloud\Auth\BearerAuthenticator;
+use ArtisanBuild\BuiltForCloud\Credential;
+use ArtisanBuild\BuiltForCloud\CredentialOwnership;
+use ArtisanBuild\BuiltForCloud\CredentialUsageRecorder;
+use ArtisanBuild\BuiltForCloud\DomainIdentityContext;
+use ArtisanBuild\BuiltForCloud\InstallationAuthority;
+use ArtisanBuild\BuiltForCloud\SubjectType;
+use ArtisanBuild\BuiltForCloud\User;
 use ArtisanBuild\MatteContracts\Exceptions\InvalidEnvelope;
 use ArtisanBuild\MatteContracts\JobStatus;
 use ArtisanBuild\MatteContracts\JobStatusEnvelope;
@@ -25,11 +33,15 @@ use Throwable;
 
 final class RemoveController extends Controller
 {
-    public function store(Request $request, TokenRegistry $tokens, Converter $converter): JsonResponse|Response
-    {
-        $appId = $tokens->resolve((string) $request->bearerToken());
+    public function __construct(
+        private readonly BearerAuthenticator $authenticator,
+        private readonly AppPurposeRegistry $purposes,
+        private readonly CredentialUsageRecorder $usage,
+    ) {}
 
-        if ($appId === null) {
+    public function store(Request $request, Converter $converter): JsonResponse|Response
+    {
+        if (! $this->admit($request)) {
             return response()->json(['message' => 'Unauthorized.'], 401);
         }
 
@@ -49,7 +61,6 @@ final class RemoveController extends Controller
         Storage::disk($diskName)->put($inputRef, $bytes);
 
         $matteJob = MatteJob::query()->create([
-            'token_id' => $appId,
             'input_ref' => $inputRef,
             'mode' => $options->mode->value,
             'preset' => $options->preset->value,
@@ -67,14 +78,17 @@ final class RemoveController extends Controller
             $diskName,
             $inputRef,
             $outputKey,
-            $request->string('callback_url')->isNotEmpty() ? $request->string('callback_url')->toString() : null,
         );
 
         return response()->json(JobStatusEnvelope::make($matteJob->id, JobStatus::Queued)->toArray(), 202);
     }
 
-    public function show(string $jobId): JsonResponse
+    public function show(Request $request, string $jobId): JsonResponse
     {
+        if (! $this->admit($request)) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
         $matteJob = MatteJob::query()->find($jobId);
 
         if ($matteJob === null) {
@@ -89,11 +103,9 @@ final class RemoveController extends Controller
         )->toArray());
     }
 
-    public function result(Request $request, TokenRegistry $tokens, string $jobId): JsonResponse|Response
+    public function result(Request $request, string $jobId): JsonResponse|Response
     {
-        $appId = $tokens->resolve((string) $request->bearerToken());
-
-        if ($appId === null) {
+        if (! $this->admit($request)) {
             return response()->json(['message' => 'Unauthorized.'], 401);
         }
 
@@ -136,12 +148,48 @@ final class RemoveController extends Controller
     private function validateImage(Request $request): void
     {
         $validator = Validator::make($request->all(), [
+            'callback_url' => ['prohibited'],
             'image' => ['required', 'image'],
         ]);
 
         if ($validator->fails()) {
-            throw new InvalidEnvelope($validator->errors()->first('image') ?: 'The image field is invalid.');
+            throw new InvalidEnvelope($validator->errors()->first() ?: 'The request is invalid.');
         }
+    }
+
+    private function admit(Request $request): bool
+    {
+        $credential = $this->authenticator->credential($request);
+
+        if ($credential === null || $credential->purpose !== $this->purposes->purpose('matte.remove')) {
+            return false;
+        }
+
+        $principalIsAllowed = match ($credential->ownership()) {
+            CredentialOwnership::Installation => $credential->subject_type === SubjectType::Installation,
+            CredentialOwnership::Account => $this->accountCanUseProduct($credential),
+        };
+
+        return $principalIsAllowed && $this->usage->recordUsage($credential);
+    }
+
+    private function accountCanUseProduct(Credential $credential): bool
+    {
+        $userId = filter_var(
+            $credential->user_id,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]],
+        );
+
+        if (! is_int($userId)) {
+            return false;
+        }
+
+        $user = User::query()->find($userId);
+
+        return $user instanceof User
+            && hash_equals((string) $user->getAuthIdentifier(), (string) $credential->user_id)
+            && DomainIdentityContext::forUser($user, InstallationAuthority::current())->canUseProduct();
     }
 
     private function removalOptions(Request $request): RemovalOptions

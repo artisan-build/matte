@@ -11,9 +11,7 @@ use ArtisanBuild\MatteServer\Exceptions\ConversionFailed;
 use ArtisanBuild\MatteServer\MatteJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Throwable;
 
 final class RemoveBackgroundJob implements ShouldQueue
 {
@@ -25,7 +23,6 @@ final class RemoveBackgroundJob implements ShouldQueue
         public string $diskName,
         public string $inputRef,
         public string $outputKey,
-        public ?string $callbackUrl = null,
     ) {
         $this->connection = config('matte-server.queue');
     }
@@ -56,7 +53,6 @@ final class RemoveBackgroundJob implements ShouldQueue
                 'error' => $exception->getMessage(),
             ])->save();
         } finally {
-            $this->notifyCallback($matteJob->refresh());
             @unlink($inputTemp);
             @unlink($outputTemp);
         }
@@ -74,35 +70,5 @@ final class RemoveBackgroundJob implements ShouldQueue
         rename($path, $suffixedPath);
 
         return $suffixedPath;
-    }
-
-    private function notifyCallback(MatteJob $matteJob): void
-    {
-        if ($this->callbackUrl === null) {
-            return;
-        }
-
-        try {
-            $payload = [
-                'job_id' => $matteJob->getKey(),
-                'status' => $matteJob->status->value,
-                'output_ref' => $matteJob->output_ref,
-                'error' => $matteJob->error,
-            ];
-            $body = json_encode($payload, JSON_THROW_ON_ERROR);
-            $secret = config('matte-server.webhook_secret');
-            $request = Http::timeout(5)->withBody($body, 'application/json');
-
-            if (is_string($secret) && $secret !== '') {
-                $request = $request->withHeaders([
-                    'X-Matte-Event' => 'job.completed',
-                    'X-Matte-Signature' => 'sha256='.hash_hmac('sha256', $body, $secret),
-                ]);
-            }
-
-            $request->post($this->callbackUrl);
-        } catch (Throwable) {
-            // Best-effort callback only; conversion state is already persisted.
-        }
     }
 }

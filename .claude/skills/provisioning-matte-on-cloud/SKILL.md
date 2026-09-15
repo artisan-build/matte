@@ -52,7 +52,7 @@ Capture ids from `cloud application:get <app> --json -n` (→ `defaultEnvironmen
 3. **Bucket** — have the user attach a bucket to the env in the **dashboard** (Storage tab). Then it's the
    default disk; `MATTE_DISK` needs no value.
 4. **Managed queue** — create in the **dashboard** (v0.5.0 CLI bug), then `managed-queue:set-default`.
-5. **Deploy command** → `php artisan migrate --force`. **Token** → `FALLBACK_TOKEN` (Step 4).
+5. **Deploy command** → `php artisan migrate --force`. **Credential** → package-owned consumption credential (Step 4).
 6. **Deploy** and poll (`cloud deploy matte main --no-wait -n` → `deployment:get <id> --json -n`).
 
 ## Step 3 — Confirm + gate (REQUIRED before billables)
@@ -61,13 +61,12 @@ Present the resolved resource list + a cost note (Cloud's CLI has no per-resourc
 `cloud usage --json -n`; Matte is light — a managed-queue cluster needs the **Growth tier ~$20/mo** fixed;
 per-image compute is a fraction of a cent). **Wait for approval before any `:create`.**
 
-## Step 4 — First token + verify (functional, not by readback)
+## Step 4 — First credential + verify (functional, not by readback)
 
-- Set a bootstrap token: generate a strong random secret and set it as the `FALLBACK_TOKEN` env var —
-  `environment:variables <env> --action set --key FALLBACK_TOKEN --value "<secret>" -n --force`, then
-  **redeploy** (env vars apply on deploy). This single fallback token authenticates immediately; for
-  production, provision per-app tokens with `php artisan token:create <id>` (from
-  `artisan-build/built-for-cloud`) and delete `FALLBACK_TOKEN`.
+- Mint an installation-owned bearer in the deployed Matte environment with
+  `cloud command:run <env> --cmd="php artisan bfc:credential:mint installation '<consumer-installation-ref>' --kind=bearer --purpose=consumption --name='matte-<app-id>' --local" -n`.
+  The command reveals the plaintext once. Put it directly in the consuming app's secret manager;
+  never write it to a repo, chat, or report. There is no bootstrap or environment fallback.
 - **Binary on the worker:** `cloud command:run <env> --cmd="php artisan matte:doctor" -n` → must show
   `PASS Real grabcut conversion`.
 - **Sync API:** `curl -F image=@sample.jpg "https://<env-url>/v1/remove?sync=1" -H "Authorization: Bearer

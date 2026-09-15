@@ -10,7 +10,6 @@ return [
     'model_url' => env('MATTE_MODEL_URL', 'https://github.com/artisan-build/bg-remover/releases/download/'.env('MATTE_BG_REMOVER_TAG', 'v0.8.0').'/isnet-general-use.onnx'),
     'disk' => env('MATTE_DISK', env('FILESYSTEM_DISK', 'local')),
     'queue' => env('MATTE_QUEUE_CONNECTION'),
-    'webhook_secret' => env('MATTE_WEBHOOK_SECRET'),
     'timeout' => (int) env('MATTE_TIMEOUT', 120),
     'default_mode' => env('MATTE_DEFAULT_MODE', 'ml'),
     'route_prefix' => env('MATTE_ROUTE_PREFIX', ''),

@@ -22,9 +22,9 @@ final readonly class MatteClient
     /**
      * @param  array<string, mixed>  $options
      */
-    public function remove(mixed $image, array $options = [], ?string $callbackUrl = null): JobHandle
+    public function remove(mixed $image, array $options = []): JobHandle
     {
-        $payload = $this->postRemove($image, $options, $callbackUrl, sync: false);
+        $payload = $this->postRemove($image, $options, sync: false);
 
         if ($payload->status() !== 202) {
             throw MatteException::unexpectedResponse($payload->status(), $payload->body());
@@ -44,7 +44,7 @@ final readonly class MatteClient
      */
     public function removeSync(mixed $image, array $options = []): string
     {
-        $payload = $this->postRemove($image, $options, callbackUrl: null, sync: true);
+        $payload = $this->postRemove($image, $options, sync: true);
 
         if ($payload->status() !== 200) {
             throw MatteException::unexpectedResponse($payload->status(), $payload->body());
@@ -98,14 +98,10 @@ final readonly class MatteClient
     /**
      * @param  array<string, mixed>  $options
      */
-    private function postRemove(mixed $image, array $options, ?string $callbackUrl, bool $sync): Response
+    private function postRemove(mixed $image, array $options, bool $sync): Response
     {
         $normalizedImage = $this->normalizeImage($image);
         $fields = $this->options($options)->toArray();
-
-        if ($callbackUrl !== null) {
-            $fields['callback_url'] = $callbackUrl;
-        }
 
         $url = $this->endpoint('/v1/remove').($sync ? '?sync=1' : '');
 

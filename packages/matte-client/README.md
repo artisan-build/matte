@@ -16,7 +16,7 @@ Use the [default integration guide](docs/integrate/default.md) when an agent is 
 requirement** — the server is a plain HTTP API, so anything can POST to it directly. The SDK
 just makes the common Laravel case ergonomic.
 
-- **`Matte::remove($image, $options, $callbackUrl?)`** → a `JobHandle` (async submit). The
+- **`Matte::remove($image, $options)`** → a `JobHandle` (async submit). The
   `$image` can be a file path, raw bytes, an `UploadedFile`, or an `SplFileInfo`.
 - **`Matte::removeSync($image, $options)`** → the transparent PNG bytes, inline, for small /
   interactive cases.
@@ -26,7 +26,7 @@ just makes the common Laravel case ergonomic.
 It speaks the [`matte-contracts`](https://github.com/artisan-build/matte-contracts) wire
 protocol and authenticates with a `Bearer` token.
 
-## Async, two ways — simple by default
+## Async polling
 
 The default keeps the install **zero-infrastructure**: no public endpoint, no websockets.
 
@@ -34,9 +34,6 @@ The default keeps the install **zero-infrastructure**: no public endpoint, no we
   polls the server on your app's own queue, optionally stores the result to `MATTE_STORE_DISK`,
   and fires a **`MatteRemovalCompleted`** event you listen for. Works everywhere — localhost,
   CI, behind a firewall.
-- **Signed webhook (opt-in).** Set `MATTE_WEBHOOK_PATH` and pass a `callback_url`; the package
-  registers a receiver that verifies the server's `X-Matte-Signature` (constant-time HMAC) and
-  fires the same `MatteRemovalCompleted` event. Lower latency at scale, but needs a public URL.
 
 ```php
 use ArtisanBuild\MatteClient\Facades\Matte;
@@ -51,8 +48,7 @@ $png = Matte::removeSync($smallImage);
 
 ## Activation — by presence of config
 
-The client is active when `MATTE_URL` and `MATTE_TOKEN` are set. The webhook receiver is
-registered only when `MATTE_WEBHOOK_PATH` is configured.
+The client is active when `MATTE_URL` and `MATTE_TOKEN` are set. Async completion uses polling.
 
 ## Installation
 
@@ -61,10 +57,16 @@ composer require artisan-build/matte-client
 php artisan matte:install
 ```
 
-`matte:install` prompts for the Matte server URL and the API token (and an optional webhook
-secret), writes `MATTE_URL` / `MATTE_TOKEN` / `MATTE_WEBHOOK_SECRET` to your `.env`, publishes
-the config, and pins `matte-contracts` to a caret constraint. Generate the token with
-`php artisan token:create <client-id>` (from `artisan-build/built-for-cloud`).
+`matte:install` prompts for the Matte server URL and bearer credential, writes `MATTE_URL` and
+`MATTE_TOKEN` to your `.env`, publishes the config, and pins `matte-contracts` to a caret constraint.
+On the Matte server, mint the credential with:
+
+```shell
+php artisan bfc:credential:mint installation '<consumer-installation-ref>' --kind=bearer --purpose=consumption --name='matte-<app-id>' --local
+```
+
+The existing webhook receiver/verifier classes are explicitly retained as dormant v0.13.0 residue.
+Callback submission is unsupported in this release, and the server rejects non-empty callback URLs.
 
 ## License
 

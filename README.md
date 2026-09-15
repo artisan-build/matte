@@ -6,7 +6,7 @@
 
 Matte is background removal you **fork and deploy to your own Laravel Cloud account**. Drop the
 client into any Laravel app, point it at your self-hosted server, and get transparent PNGs
-back — asynchronously through a queue (poll or signed webhook) or synchronously for small
+back — asynchronously through a queue and polling or synchronously for small
 images. The server is a plain HTTP API, so anything that speaks HTTP can use it; the Laravel
 client is a convenience, not a requirement.
 
@@ -66,7 +66,7 @@ Laravel Cloud managed-queue worker — no container, no sidecar, no system packa
   healthy.
 
 So the entire pipeline — receive image → store to object storage → enqueue → worker runs the
-binary → transparent PNG back to storage → status/webhook — lives inside **one managed Laravel
+binary → transparent PNG back to storage → status/result — lives inside **one managed Laravel
 Cloud app**. There is no extra infrastructure to operate.
 
 > **Deploy it with a coding agent.** This repo ships a
@@ -75,7 +75,7 @@ Cloud app**. There is no extra infrastructure to operate.
 > instance on Laravel Cloud."* It bootstraps with `cloud ship` + `cloud repo:config`, then
 > provisions the database, the object-storage bucket, the managed queue, and the build-command
 > binary provisioning, wires the `MATTE_*` config, deploys, migrates, and issues the first API
-> token. It specializes the Cloud CLI's generic `deploying-laravel-cloud` skill; the manual
+> credential. It specializes the Cloud CLI's generic `deploying-laravel-cloud` skill; the manual
 > equivalent is in the skill's [`reference/`](.claude/skills/provisioning-matte-on-cloud/reference/).
 
 ## Prefer not to operate it?
@@ -102,7 +102,7 @@ binary and server patched. Unmetered background removal, none of the upkeep.
                                        Worker (arm64) → Process::run bg-remover  (baked into the artifact)
                                                 │  transparent PNG → object storage (deterministic key)
                                                 ▼
-                                 GET /v1/jobs/{id}  (poll)   or   signed webhook   →   GET /v1/jobs/{id}/result
+                                 GET /v1/jobs/{id}  (poll)   →   GET /v1/jobs/{id}/result
 ```
 
 - **One isolated environment per client** on Laravel Cloud — its own compute, database, queue,
@@ -111,8 +111,8 @@ binary and server patched. Unmetered background removal, none of the upkeep.
 - **The server is a plain HTTP API.** Any language can call it directly, so
   [`matte-contracts`](packages/matte-contracts) is a *public* wire contract, not just an
   internal envelope. The Laravel client is a fast-path.
-- **Async by default, sync when you want it.** Submit returns a job id; poll `GET /v1/jobs/{id}`
-  or receive a signed webhook, then fetch the PNG from `/v1/jobs/{id}/result`. `?sync=1` returns
+- **Async by default, sync when you want it.** Submit returns a job id; poll `GET /v1/jobs/{id}`,
+  then fetch the PNG from `/v1/jobs/{id}/result`. `?sync=1` returns
   the bytes inline for small/interactive cases.
 - **Idempotent storage.** The output key is a hash of the input bytes + options, so retries
   don't reprocess.
@@ -129,8 +129,8 @@ business logic to drift.
 | Package | Repo | Installed in | Role |
 | --- | --- | --- | --- |
 | [`artisan-build/matte-contracts`](https://github.com/artisan-build/matte-contracts) | read-only split | both packages | The versioned HTTP wire protocol. The single place compatibility lives. |
-| [`artisan-build/matte-server`](https://github.com/artisan-build/matte-server) | read-only split | the Matte app | The receive side: ingest, token auth, storage, queue, the worker that runs the binary, status/result, signed webhooks. |
-| [`artisan-build/matte-client`](https://github.com/artisan-build/matte-client) | read-only split | consuming apps | The send side: `Matte::remove()`, polling/webhooks, `matte:install`. A convenience SDK. |
+| [`artisan-build/matte-server`](https://github.com/artisan-build/matte-server) | read-only split | the Matte app | The receive side: ingest, bearer authentication, storage, queue, the worker that runs the binary, and status/result. |
+| [`artisan-build/matte-client`](https://github.com/artisan-build/matte-client) | read-only split | consuming apps | The send side: `Matte::remove()`, polling, and `matte:install`. A convenience SDK. |
 
 **Contributing.** Issues and PRs are **disabled** on the three split repos — the same model as
 Laravel's own `illuminate/*` read-only splits. All development happens here in the monorepo.
@@ -157,18 +157,24 @@ See [`matte-contracts`](packages/matte-contracts) for the rules and the envelope
 
 ## Quick start
 
-**Issue an API token** for a consumer. Tokens are managed by
-[`artisan-build/built-for-cloud`](https://github.com/artisan-build/built-for-cloud) and stored
-(hashed) in your deployed database; the command runs against your deployed environment through the
-Laravel Cloud CLI:
+**Issue an installation-owned consumption credential** for a consumer with
+[`artisan-build/built-for-cloud`](https://github.com/artisan-build/built-for-cloud). Run the command
+inside the intended Matte environment; `--local` keeps the package command on that environment's
+database rather than delegating to another Cloud target:
 
 ```shell
-php artisan token:create <client-id>
+php artisan bfc:credential:mint installation '<consumer-installation-ref>' --kind=bearer --purpose=consumption --name='matte-<app-id>' --local
 ```
 
-The plaintext token is printed once — store it in the consuming app. For local or bootstrap use you
-can instead set a single `FALLBACK_TOKEN` in the environment (delete it and use per-app tokens for
-production workloads).
+The plaintext bearer is revealed once and only its hash is stored. Put it directly in the consuming
+app's secret manager. Product credentials carry no Built for Cloud management abilities.
+
+**Upgrading from the legacy token store.** The unified-purpose migration retires legacy rows rather
+than guessing authority for them. Inventory the tombstones with `php artisan bfc:credential:list
+--local`, mint and distribute one explicit `consumption` replacement per consumer using the command
+above, verify each consumer against submit/status/result, then revoke any superseded unified row by
+id with `php artisan bfc:credential:revoke <credential-id> --local`. There is no fallback credential,
+automatic conversion, or recoverable plaintext to reuse.
 
 **In a consuming Laravel app:**
 

@@ -11,6 +11,10 @@ it('boots the headless Matte app root route', function (): void {
         ]);
 });
 
+it('keeps the health endpoint public', function (): void {
+    $this->get('/up')->assertOk();
+});
+
 it('rejects remove requests without a bearer token', function (): void {
     $this->postJson(route('matte.remove'), [])
         ->assertUnauthorized();

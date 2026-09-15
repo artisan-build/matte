@@ -40,6 +40,7 @@ it('submits an async removal request with bearer token and multipart fields', fu
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://matte.example/v1/remove'
         && $request->hasHeader('Authorization', 'Bearer secret-token')
         && $request->hasFile('image', 'image-bytes', basename($path))
+        && ! collect($request->data())->contains(fn (array $part): bool => ($part['name'] ?? null) === 'callback_url')
         && collect($request->data())->contains(fn (array $part): bool => ($part['name'] ?? null) === 'mode' && ($part['contents'] ?? null) === 'grabcut'));
 });
 
@@ -65,7 +66,7 @@ it('submits a sync removal request and returns png bytes', function (): void {
     expect(Matte::removeSync('raw-image-bytes'))->toBe('png-bytes');
 });
 
-it('accepts signed webhooks and rejects bad signatures', function (): void {
+it('retains the v0.13.0 callback receiver residue with signature verification', function (): void {
     Event::fake();
     config()->set('matte.webhook_path', 'matte/webhook');
     config()->set('matte.webhook_secret', 'webhook-secret');

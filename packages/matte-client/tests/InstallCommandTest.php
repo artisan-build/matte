@@ -12,7 +12,6 @@ it('writes matte credentials to the environment file', function (): void {
     $this->artisan('matte:install')
         ->expectsQuestion('Matte server URL', 'https://matte.example')
         ->expectsQuestion('Matte API token', 'api-token')
-        ->expectsQuestion('Matte webhook secret (optional)', '')
         ->assertExitCode(0);
 
     expect(file_get_contents($envPath))->toContain('MATTE_URL=https://matte.example')

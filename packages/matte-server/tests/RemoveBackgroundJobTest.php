@@ -5,13 +5,14 @@ declare(strict_types=1);
 use ArtisanBuild\MatteContracts\Mode;
 use ArtisanBuild\MatteContracts\Preset;
 use ArtisanBuild\MatteContracts\RemovalOptions;
+use ArtisanBuild\MatteServer\BinaryLocator;
 use ArtisanBuild\MatteServer\Converter;
 use ArtisanBuild\MatteServer\Jobs\RemoveBackgroundJob;
 use ArtisanBuild\MatteServer\MatteJob;
 use ArtisanBuild\MatteServer\OutputKey;
-use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 
 it('processes a queued removal when host dependencies are available', function (): void {
@@ -56,69 +57,34 @@ it('processes a queued removal when host dependencies are available', function (
     }
 });
 
-it('signs callback requests when webhook secret is set', function (): void {
+it('cannot send a callback from the executable job flow', function (): void {
     $this->artisan('migrate')->assertExitCode(0);
-    config()->set('matte-server.webhook_secret', 'shhh');
     Http::fake();
-
-    $matteJob = MatteJob::factory()->done()->create([
-        'output_ref' => 'outputs/result.png',
-        'error' => null,
+    Process::fake([
+        '*' => Process::result(exitCode: 1),
     ]);
-    $callbackUrl = 'https://example.test/callback';
+    Storage::fake('matte-test');
 
-    invokeNotifyCallback(new RemoveBackgroundJob(
+    $inputRef = 'inputs/input.png';
+    Storage::disk('matte-test')->put($inputRef, 'image-bytes');
+    $matteJob = MatteJob::factory()->create([
+        'input_ref' => $inputRef,
+    ]);
+    $job = new RemoveBackgroundJob(
         $matteJob->id,
         new RemovalOptions(mode: Mode::Grabcut, preset: Preset::Fast),
         'matte-test',
-        'inputs/input.png',
+        $inputRef,
         'outputs/result.png',
-        $callbackUrl,
-    ), $matteJob);
+    );
 
-    Http::assertSent(function (Request $request) use ($callbackUrl, $matteJob): bool {
-        $body = $request->body();
+    $job->handle(new Converter(new BinaryLocator(PHP_OS_FAMILY, php_uname('m'))));
 
-        return $request->url() === $callbackUrl
-            && $request->hasHeader('X-Matte-Event', 'job.completed')
-            && $request->hasHeader('X-Matte-Signature', 'sha256='.hash_hmac('sha256', $body, 'shhh'))
-            && json_decode($body, true) === [
-                'job_id' => $matteJob->id,
-                'status' => 'done',
-                'output_ref' => 'outputs/result.png',
-                'error' => null,
-            ];
-    });
+    Http::assertNothingSent();
+    expect($matteJob->refresh()->status->value)->toBe('failed')
+        ->and((new ReflectionClass($job))->hasProperty('callbackUrl'))->toBeFalse()
+        ->and((new ReflectionClass($job))->hasMethod('notifyCallback'))->toBeFalse();
 });
-
-it('sends unsigned callback requests when webhook secret is unset', function (): void {
-    $this->artisan('migrate')->assertExitCode(0);
-    config()->set('matte-server.webhook_secret', null);
-    Http::fake();
-
-    $matteJob = MatteJob::factory()->done()->create();
-    $callbackUrl = 'https://example.test/callback';
-
-    invokeNotifyCallback(new RemoveBackgroundJob(
-        $matteJob->id,
-        new RemovalOptions(mode: Mode::Grabcut, preset: Preset::Fast),
-        'matte-test',
-        'inputs/input.png',
-        (string) $matteJob->output_ref,
-        $callbackUrl,
-    ), $matteJob);
-
-    Http::assertSent(function (Request $request) use ($callbackUrl): bool {
-        return $request->url() === $callbackUrl
-            && ! $request->hasHeader('X-Matte-Signature');
-    });
-});
-
-function invokeNotifyCallback(RemoveBackgroundJob $job, MatteJob $matteJob): void
-{
-    $method = new ReflectionMethod($job, 'notifyCallback');
-    $method->invoke($job, $matteJob);
-}
 
 function provisionBinaryForRemoveBackgroundJob(): int
 {

@@ -20,12 +20,10 @@ final class InstallCommand extends Command
     {
         $url = text(label: 'Matte server URL', required: true);
         $token = password(label: 'Matte API token', required: true);
-        $webhookSecret = password(label: 'Matte webhook secret (optional)', required: false);
 
         $this->writeEnvironment([
             'MATTE_URL' => $url,
             'MATTE_TOKEN' => $token,
-            'MATTE_WEBHOOK_SECRET' => $webhookSecret,
         ]);
 
         Artisan::call('vendor:publish', [
@@ -33,7 +31,7 @@ final class InstallCommand extends Command
             '--tag' => 'matte-config',
         ]);
 
-        $this->components->info('Matte client installed. Configure MATTE_WEBHOOK_PATH if you want to receive signed completion webhooks.');
+        $this->components->info('Matte client installed.');
 
         return self::SUCCESS;
     }
