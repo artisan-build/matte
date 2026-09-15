@@ -94,6 +94,43 @@ it('uniformly denies invalid credentials before product work or data access', fu
     ['wrong-purpose', 'result'],
 ]);
 
+it('uniformly denies account-bound external consumers before product work or data access', function (string $endpoint): void {
+    Queue::fake();
+    Storage::fake('matte-test');
+
+    $user = User::query()->create([
+        'name' => 'External consumer owner',
+        'email' => 'external-consumer-owner@example.test',
+    ]);
+    $user->forceFill(['role' => UserRole::Member->value, 'status' => 'active'])->save();
+    $credential = $this->mintCredential([
+        'purpose' => CredentialPurpose::Consumption,
+        'subject_type' => SubjectType::ExternalConsumer,
+        'subject_ref' => 'supported-external-consumer',
+        'user_id' => (string) $user->id,
+    ]);
+    $matteJob = $endpoint === 'result'
+        ? MatteJob::factory()->done()->create(['output_ref' => 'outputs/private.png'])
+        : MatteJob::factory()->failed()->create(['error' => 'private failure detail']);
+    Storage::disk('matte-test')->put('outputs/private.png', 'private-png-bytes');
+    $jobCount = MatteJob::query()->count();
+    $storedFiles = Storage::disk('matte-test')->allFiles();
+
+    $response = match ($endpoint) {
+        'submit' => $this->actingAsCredential($credential)->postJson('/v1/remove', [
+            'image' => UploadedFile::fake()->image('x.png'),
+        ]),
+        'status' => $this->actingAsCredential($credential)->getJson('/v1/jobs/'.$matteJob->id),
+        'result' => $this->actingAsCredential($credential)->getJson('/v1/jobs/'.$matteJob->id.'/result'),
+    };
+
+    $response->assertUnauthorized()->assertExactJson(['message' => 'Unauthorized.']);
+    expect(MatteJob::query()->count())->toBe($jobCount)
+        ->and(Storage::disk('matte-test')->allFiles())->toBe($storedFiles)
+        ->and($credential->credential->refresh()->last_used_at)->toBeNull();
+    Queue::assertNothingPushed();
+})->with(['submit', 'status', 'result']);
+
 it('allows every account role to submit asynchronous work', function (UserRole $role): void {
     Queue::fake();
     Storage::fake('matte-test');

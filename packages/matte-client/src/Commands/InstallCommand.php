@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ArtisanBuild\MatteClient\Commands;
 
+use ArtisanBuild\MatteClient\MatteClientServiceProvider;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 

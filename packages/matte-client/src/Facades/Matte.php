@@ -10,8 +10,8 @@ use ArtisanBuild\MatteContracts\JobStatusEnvelope;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static JobHandle remove(mixed $image, array $options = [])
- * @method static string removeSync(mixed $image, array $options = [])
+ * @method static JobHandle remove(mixed $image, array<string, mixed> $options = [], ?string $callbackUrl = null)
+ * @method static string removeSync(mixed $image, array<string, mixed> $options = [])
  * @method static JobStatusEnvelope status(string $jobId)
  * @method static string result(string $jobId)
  *

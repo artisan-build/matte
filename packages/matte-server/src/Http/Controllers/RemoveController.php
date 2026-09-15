@@ -175,6 +175,10 @@ final class RemoveController extends Controller
 
     private function accountCanUseProduct(Credential $credential): bool
     {
+        if ($credential->subject_type !== SubjectType::UserPrincipal) {
+            return false;
+        }
+
         $userId = filter_var(
             $credential->user_id,
             FILTER_VALIDATE_INT,

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use ArtisanBuild\MatteClient\Events\MatteRemovalCompleted;
+use ArtisanBuild\MatteClient\Exceptions\MatteException;
 use ArtisanBuild\MatteClient\Facades\Matte;
 use ArtisanBuild\MatteClient\Http\Controllers\WebhookController;
 use ArtisanBuild\MatteClient\JobHandle;
@@ -42,6 +43,26 @@ it('submits an async removal request with bearer token and multipart fields', fu
         && $request->hasFile('image', 'image-bytes', basename($path))
         && ! collect($request->data())->contains(fn (array $part): bool => ($part['name'] ?? null) === 'callback_url')
         && collect($request->data())->contains(fn (array $part): bool => ($part['name'] ?? null) === 'mode' && ($part['contents'] ?? null) === 'grabcut'));
+});
+
+it('rejects a positional callback URL before sending a request', function (): void {
+    Http::fake();
+
+    expect(fn (): JobHandle => Matte::remove('raw-image-bytes', [], 'https://consumer.example/callback'))
+        ->toThrow(MatteException::class, 'Callback URLs are not supported by this Matte client version.');
+
+    Http::assertNothingSent();
+});
+
+it('rejects a named callback URL before sending a request', function (): void {
+    Http::fake();
+
+    expect(fn (): JobHandle => Matte::remove(
+        image: 'raw-image-bytes',
+        callbackUrl: 'https://consumer.example/callback',
+    ))->toThrow(MatteException::class, 'Callback URLs are not supported by this Matte client version.');
+
+    Http::assertNothingSent();
 });
 
 it('waits for completion and fetches the result bytes', function (): void {

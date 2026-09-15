@@ -22,7 +22,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class MatteJob extends Model
 {
+    /** @use HasFactory<MatteJobFactory> */
     use HasFactory;
+
     use HasUuids;
 
     public $incrementing = false;

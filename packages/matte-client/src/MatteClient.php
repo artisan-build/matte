@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace ArtisanBuild\MatteClient;
 
 use ArtisanBuild\MatteClient\Exceptions\MatteException;
+use ArtisanBuild\MatteClient\Facades\Http;
 use ArtisanBuild\MatteContracts\JobStatusEnvelope;
 use ArtisanBuild\MatteContracts\RemovalOptions;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Http;
 use SplFileInfo;
 
 final readonly class MatteClient
@@ -22,8 +22,12 @@ final readonly class MatteClient
     /**
      * @param  array<string, mixed>  $options
      */
-    public function remove(mixed $image, array $options = []): JobHandle
+    public function remove(mixed $image, array $options = [], ?string $callbackUrl = null): JobHandle
     {
+        if ($callbackUrl !== null) {
+            throw new MatteException('Callback URLs are not supported by this Matte client version.');
+        }
+
         $payload = $this->postRemove($image, $options, sync: false);
 
         if ($payload->status() !== 202) {
