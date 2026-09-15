@@ -155,7 +155,7 @@ it('allows every account role to submit synchronous work', function (UserRole $r
     $runtimePath = fakeConverterRuntime();
     Process::fake([
         'otool *' => Process::result(),
-        'ldd *' => Process::result(output: 'libonnxruntime.so => /tmp/libonnxruntime.so'),
+        '*ldd*' => Process::result(output: 'libonnxruntime.so => /tmp/libonnxruntime.so'),
     ]);
 
     try {
