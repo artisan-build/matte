@@ -2,10 +2,31 @@
 
 declare(strict_types=1);
 
+use ArtisanBuild\BuiltForCloud\Commands\ConsoleReKeyCommand;
+use ArtisanBuild\BuiltForCloud\Commands\ConsoleRetireKeyCommand;
+use ArtisanBuild\BuiltForCloud\Commands\CreateAdminCommand;
+use ArtisanBuild\BuiltForCloud\Commands\CredentialActivateCommand;
+use ArtisanBuild\BuiltForCloud\Commands\CredentialListCommand;
+use ArtisanBuild\BuiltForCloud\Commands\CredentialMintCommand;
+use ArtisanBuild\BuiltForCloud\Commands\CredentialRevokeCommand;
+use ArtisanBuild\BuiltForCloud\Commands\CredentialRotateCommand;
+use ArtisanBuild\BuiltForCloud\Commands\HmacRewrapCommand;
+use ArtisanBuild\BuiltForCloud\Commands\InstallOperatorCredentialCommand;
+use ArtisanBuild\BuiltForCloud\Commands\OutboxDrainCommand;
+use ArtisanBuild\BuiltForCloud\Commands\OwnershipMintClaimCommand;
+use ArtisanBuild\BuiltForCloud\Commands\OwnershipRemintOwnerTokenCommand;
+use ArtisanBuild\BuiltForCloud\Commands\SigningRootProvisionCommand;
+use ArtisanBuild\BuiltForCloud\Commands\SubjectOffboardCommand;
+use ArtisanBuild\BuiltForCloud\Commands\WarnExpiringCredentialsCommand;
 use ArtisanBuild\BuiltForCloud\CredentialPurpose;
+use ArtisanBuild\BuiltForCloud\Jobs\DeliverOwnershipWebhook;
 use ArtisanBuild\BuiltForCloud\Testing\ConsumerConformance;
 use ArtisanBuild\BuiltForCloud\Testing\ContractAssertions;
 use ArtisanBuild\BuiltForCloud\Testing\FleetConformance;
+use ArtisanBuild\MatteServer\Commands\DoctorCommand;
+use ArtisanBuild\MatteServer\Commands\ProvisionBinaryCommand;
+use ArtisanBuild\MatteServer\Commands\RemoveCommand;
+use ArtisanBuild\MatteServer\Jobs\RemoveBackgroundJob;
 use Composer\InstalledVersions;
 
 uses(ContractAssertions::class);
@@ -68,27 +89,27 @@ it('passes Built for Cloud fleet conformance', function (): void {
         ]),
         'legacy_removal' => [],
         'system_authority' => $sorted([
-            'ArtisanBuild\BuiltForCloud\Commands\ConsoleReKeyCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\ConsoleRetireKeyCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\CreateAdminCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\CredentialActivateCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\CredentialListCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\CredentialMintCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\CredentialRevokeCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\CredentialRotateCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\HmacRewrapCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\InstallOperatorCredentialCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\OutboxDrainCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\OwnershipMintClaimCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\OwnershipRemintOwnerTokenCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\SigningRootProvisionCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\SubjectOffboardCommand',
-            'ArtisanBuild\BuiltForCloud\Commands\WarnExpiringCredentialsCommand',
-            'ArtisanBuild\BuiltForCloud\Jobs\DeliverOwnershipWebhook',
-            'ArtisanBuild\MatteServer\Commands\DoctorCommand',
-            'ArtisanBuild\MatteServer\Commands\ProvisionBinaryCommand',
-            'ArtisanBuild\MatteServer\Commands\RemoveCommand',
-            'ArtisanBuild\MatteServer\Jobs\RemoveBackgroundJob',
+            ConsoleReKeyCommand::class,
+            ConsoleRetireKeyCommand::class,
+            CreateAdminCommand::class,
+            CredentialActivateCommand::class,
+            CredentialListCommand::class,
+            CredentialMintCommand::class,
+            CredentialRevokeCommand::class,
+            CredentialRotateCommand::class,
+            HmacRewrapCommand::class,
+            InstallOperatorCredentialCommand::class,
+            OutboxDrainCommand::class,
+            OwnershipMintClaimCommand::class,
+            OwnershipRemintOwnerTokenCommand::class,
+            SigningRootProvisionCommand::class,
+            SubjectOffboardCommand::class,
+            WarnExpiringCredentialsCommand::class,
+            DeliverOwnershipWebhook::class,
+            DoctorCommand::class,
+            ProvisionBinaryCommand::class,
+            RemoveCommand::class,
+            RemoveBackgroundJob::class,
         ]),
         'no_signing_path' => [],
         'ui_config_reads' => $sorted([
