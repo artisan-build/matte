@@ -15,6 +15,7 @@ use ArtisanBuild\BuiltForCloud\Commands\InstallOperatorCredentialCommand;
 use ArtisanBuild\BuiltForCloud\Commands\OutboxDrainCommand;
 use ArtisanBuild\BuiltForCloud\Commands\OwnershipMintClaimCommand;
 use ArtisanBuild\BuiltForCloud\Commands\OwnershipRemintOwnerTokenCommand;
+use ArtisanBuild\BuiltForCloud\Commands\PruneCredentialAuthorizationsCommand;
 use ArtisanBuild\BuiltForCloud\Commands\SigningRootProvisionCommand;
 use ArtisanBuild\BuiltForCloud\Commands\SubjectOffboardCommand;
 use ArtisanBuild\BuiltForCloud\Commands\WarnExpiringCredentialsCommand;
@@ -74,7 +75,9 @@ it('passes Built for Cloud fleet conformance', function (): void {
             'path:HMAC|Http\Middleware\VerifyHmacSignature+Hmac\HmacVerifier',
             'path:MCP|Http\Middleware\AuthenticateMcp:store-bearer+v4.public',
             'path:asymmetric|Actions\MintCredential::mintEnrollment+CompleteAsymmetricEnrollment+AsymmetricVerificationKeys',
+            'path:device|Http\Controllers\DeviceAuthorizations+Actions\StartDeviceAuthorization/DecideDeviceAuthorization/PollDeviceAuthorization+BoundBearerCredentialAuthenticator+ContainCredentialAuthorizations',
             'path:enrollment|OnboardingToken+POST:/bfc/claim,/bfc/onboarding/issue,/exchange,/verify',
+            'path:loopback|Http\Controllers\LoopbackAuthorizations+Actions\StartLoopbackAuthorization/DecideLoopbackAuthorization/ExchangeLoopbackAuthorization+BoundBearerCredentialAuthenticator+ContainCredentialAuthorizations',
             'path:system|SubjectType::Operator/Application/Installation+AuditActorType::CliOperator',
         ]),
         'credential_writers' => $sorted([
@@ -102,6 +105,7 @@ it('passes Built for Cloud fleet conformance', function (): void {
             OutboxDrainCommand::class,
             OwnershipMintClaimCommand::class,
             OwnershipRemintOwnerTokenCommand::class,
+            PruneCredentialAuthorizationsCommand::class,
             SigningRootProvisionCommand::class,
             SubjectOffboardCommand::class,
             WarnExpiringCredentialsCommand::class,
@@ -110,6 +114,7 @@ it('passes Built for Cloud fleet conformance', function (): void {
             ProvisionBinaryCommand::class,
             RemoveCommand::class,
             RemoveBackgroundJob::class,
+            'Closure@package/src/SystemAuthoritySchedule.php:27',
         ]),
         'no_signing_path' => [],
         'ui_config_reads' => $sorted([
