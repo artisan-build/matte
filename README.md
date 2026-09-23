@@ -22,8 +22,7 @@ account you own. It stands the server up, keeps it patched, and connects it to y
 the server URL and the API credential directly into your app's environment, so the credential never
 passes through your hands.
 
-Use Scalpels if you would rather ship your product than operate an image pipeline. Everything below
-is the do-it-yourself path.
+Use Scalpels for the managed setup. Everything below is the do-it-yourself path.
 
 ## The image API
 
@@ -54,8 +53,9 @@ your app  ──GET /v1/jobs/{id}──►  "done"  ──GET /v1/jobs/{id}/resu
 ```
 
 The conversion itself is done by [`bg-remover`](https://github.com/artisan-build/bg-remover), a
-command-line program Matte downloads and runs. It has two engines: an ML model (the default) and
-GrabCut, a classical algorithm that needs no model file.
+command-line program Matte downloads and runs. It has two engines: a machine-learning model, which
+is the default and gives better edges, and GrabCut, a classical algorithm that needs no model file
+and is much faster to start.
 
 ## The other pages
 
@@ -85,23 +85,25 @@ all is optional, and covered in [step 8](#8-optional-the-sign-in-page).
 ### Prerequisites
 
 - **PHP 8.3 or later in the PHP 8 series** (the `^8.3` constraint excludes PHP 9), with Composer.
-  CI runs the tests on PHP 8.5.
+  The project's automated test runs use PHP 8.5.
 - **Git.**
+- **A POSIX shell.** Every command below is written for one: the Terminal on macOS or Linux, or
+  WSL or Git Bash on Windows. They will not run as written in Windows Command Prompt or PowerShell.
 - **To convert an image on your own machine**, a platform `bg-remover` ships a build for:
 
   | Platform | Local conversion |
   | --- | --- |
-  | Linux x86_64 | Works. |
-  | Linux arm64 | Works. |
+  | Linux x86_64 or arm64, glibc 2.34 or newer (Debian 12, Ubuntu 22.04 or later) | Works. |
+  | Linux on musl (Alpine) or older glibc | No build. The binary downloads but will not start. |
   | macOS on Apple Silicon | A build exists, but it **cannot currently run** — see [Troubleshooting](#troubleshooting). |
-  | Windows, macOS on Intel, anything else | Not supported. `matte:provision-binary` throws `UnsupportedPlatform`. |
+  | Windows, macOS on Intel, anything else | No build at all. `matte:provision-binary` raises `UnsupportedPlatform`. |
 
-  If you are not on Linux, [step 6](#6-convert-an-image-without-a-linux-machine) gives you a
+  Anything but the first row: [step 6](#6-convert-an-image-without-a-linux-machine) gives you a
   container command that does convert. Nothing else in this guide needs the binary — the tests, the
   API, the credentials and the deploy all work anywhere PHP does.
 - **To deploy** (steps 9–10): a [Laravel Cloud](https://cloud.laravel.com) account, and the Cloud
   CLI: `composer global require laravel/cloud-cli`, then `cloud auth` to sign in (it opens a
-  browser; in CI, set `LARAVEL_CLOUD_TOKEN` instead).
+  browser; where no browser is available, set `LARAVEL_CLOUD_TOKEN` instead).
 
 ### 1. Fork, clone and install
 
@@ -148,15 +150,16 @@ php artisan matte:provision-binary
 ```
 
 This downloads three things into a `runtime/` folder: the `bg-remover` program built for your
-operating system and CPU, the ONNX Runtime library it needs, and the default ML model. The program
+operating system and CPU, the ONNX Runtime library it needs (ONNX Runtime is the engine that runs
+machine-learning models), and the default model. The program
 itself is checked against the checksum published with the release. `runtime/` is ignored by Git.
 
 You should see `Matte binary provisioning complete.` followed by a line for each of the three files,
 each ending in `downloaded`. Run the command again and they say `already present` instead; `--force`
 downloads them afresh.
 
-Two ways this fails. On an unsupported platform it raises `UnsupportedPlatform` and names your OS
-and CPU — skip to [step 6](#6-convert-an-image-without-a-linux-machine). And the default ML model is
+Two ways this fails. On a platform with no build it raises `UnsupportedPlatform` and names your OS
+and CPU — skip to [step 6](#6-convert-an-image-without-a-linux-machine). And the default model is
 178 MB, which the command reads into memory in one go, so a PHP with a `memory_limit` under about
 200 MB dies with `Allowed memory size ... exhausted`. If that happens, run
 `php -d memory_limit=-1 artisan matte:provision-binary` instead.
@@ -184,9 +187,10 @@ reports a dynamic-library failure instead — see [Troubleshooting](#troubleshoo
 
 ### 6. Convert an image without a Linux machine
 
-The Linux builds carry OpenCV inside the binary; the only thing they load from outside is the ONNX
-Runtime library that `matte:provision-binary` places next to them. That means a stock PHP image with
-**no extra system packages** can run a conversion. If you have Docker, this works from your checkout:
+The Linux builds carry their image library inside the binary; the only thing they load from outside
+is the ONNX Runtime library that `matte:provision-binary` places next to them, plus a glibc of 2.34
+or newer. That means a stock Debian-based PHP image with **no extra system packages** can run a
+conversion. If you have Docker, this works from your checkout:
 
 ```shell
 rm -rf runtime
@@ -205,8 +209,9 @@ docker run --rm -v "$PWD:/app" -w /app php:8.4-cli \
   php artisan matte:remove my-photo.jpg --mode=grabcut --out=/app/out.png
 ```
 
-`out.png` will be an RGBA PNG with the background transparent. The container writes `runtime/` as
-root; if you later want the binary for your own machine back, `rm -rf runtime` and run step 4 again.
+`out.png` will be a PNG with a transparency channel, so the background is see-through. The container
+writes `runtime/` as root; if you later want the binary for your own machine back, `rm -rf runtime`
+and run step 4 again.
 
 ### 7. Create an API credential
 
@@ -277,11 +282,11 @@ php artisan serve --host=127.0.0.1 --port=8765
 ```
 
 Then, in another terminal, from the same checkout. The repository ships no test image, so copy any
-JPEG or PNG you have to `sample.jpg` in the checkout first, and paste the credential from step 7
-into `TOKEN`:
+JPEG or PNG you have to `sample.jpg` in the checkout first. Now put the credential from step 7 into
+a shell variable, using a prompt that does not echo it and does not put it in your shell history:
 
 ```shell
-TOKEN='paste-the-credential-here'
+read -rs TOKEN        # paste the credential, press Enter; nothing is shown
 
 # No credential -> 401.
 curl -i -F image=@sample.jpg http://127.0.0.1:8765/v1/remove
@@ -298,12 +303,27 @@ curl -o out.png -H "Authorization: Bearer $TOKEN" \
   http://127.0.0.1:8765/v1/jobs/01a0cb3d-484f-7194-82ce-f310e5938786/result
 ```
 
-`TOKEN` is set only for that shell; it is never written to a file. The job sits at `queued` until a
-queue worker picks it up, so run one in a third terminal:
+`TOKEN` lives only in that shell's memory. Typing the credential as part of a command instead —
+`TOKEN='...'` — would write it verbatim into your shell history file, which is why the hidden prompt
+is worth the extra keystroke.
+
+The job sits at `queued` until a queue worker picks it up, so run one in a third terminal:
 
 ```shell
-php artisan queue:work
+php artisan queue:work --timeout=180
 ```
+
+> ⚠️ **Set `--timeout` above `MATTE_TIMEOUT`.** Laravel's worker defaults to killing a job after 60
+> seconds, but Matte lets a conversion run for 120 (`MATTE_TIMEOUT`). A conversion that takes between
+> those two numbers gets killed by the worker, which leaves the job row stuck at `processing`. The
+> queue's own retry window has to be longer again than the worker timeout, so with the default
+> database queue also put `DB_QUEUE_RETRY_AFTER=240` in your `.env`. The rule is:
+> retry window > worker timeout > `MATTE_TIMEOUT`.
+
+Expect the first machine-learning conversion to be slow: the model is loaded from disk on every run.
+On a small test image it took about 12 seconds, against a tenth of a second for the same image with
+`mode=grabcut`. That is the real reason to prefer the asynchronous flow, and to think twice before
+using `?sync=1` in `ml` mode.
 
 On a platform where the binary cannot run, the job fails and `?sync=1` returns `503` instead of a
 PNG. Everything else above — the `401`, the `202`, the job id, the `409` before the job is done —
@@ -324,12 +344,16 @@ Form fields you can send with `POST /v1/remove`:
 | `callback_destination` | The name of a destination registered in the server's config. Async only. | none |
 
 `callback_url` is rejected on purpose: the server will not post a result to an arbitrary URL you
-hand it. Having Matte push results instead of you polling is possible but is more setup than this
-guide covers — each destination needs an entry carrying `url`, `subject_ref`, `installation`,
-`application` and `audience`, and the receiving app needs a bound HMAC credential installed so it can
-verify what arrives. The complete procedure is in
-[`packages/matte-client/docs/integrate/default.md`](packages/matte-client/docs/integrate/default.md).
-Polling works with no setup at all, so start there.
+hand it. Matte can push a result instead of you polling for it, but **this guide does not cover
+setting that up, and no other document currently does end to end.** What it takes: an entry under
+`matte-server.callback.destinations` on the server carrying exactly `url`, `subject_ref`,
+`installation`, `application` and `audience`
+([`CallbackDestination`](packages/matte-server/src/CallbackDestination.php) is the code that reads
+it); the matching four `MATTE_CALLBACK_*` values in the receiving app; and a signing credential
+issued on the server and installed in the receiver through `InstallCallbackCredential`, so the
+receiver can check that a delivery really came from your Matte instance. Expect to read the code.
+
+Polling needs none of that and is what the rest of this guide uses, so start there.
 
 The output file's storage key is a hash of the input bytes plus the options, so re-submitting the
 same image with the same options overwrites the same object instead of piling up copies. (The
@@ -347,64 +371,135 @@ conversion does run again.)
 Matte needs four things from Cloud: **compute**, a **database**, a **managed queue** (this is the
 worker that runs the conversions) and an **object-storage bucket** (this is where images live).
 
-Run these from your fork's root, in order. `<env>`, `<queue>` and `<deployment-id>` are ids the
-earlier commands print.
+Run these from your fork's root, in order. Three placeholders are values earlier commands print:
+`<env>` is the environment id, `<queue>` is the managed queue's instance id, and `<env-url>` is the
+environment's **complete URL including `https://`**, so it goes into a request as
+`<env-url>/v1/remove`, never `https://<env-url>/...`.
+
+#### Bootstrap (once, and it asks questions)
 
 ```shell
-# 1. Bootstrap. Interactive, and you do this once. The only prompt is the organisation picker.
-#    `ship` creates the application, the environment and the database, and deploys once.
 cloud ship --name=matte --database=postgres18
 cloud repo:config          # writes .cloud/config.json so later commands know the application
+```
 
-# 2. Capture the ids everything else needs.
-cloud application:get matte --json -n     # -> defaultEnvironmentId  (this is <env>) and region
-cloud environment:get <env> --json -n     # -> url (https://matte-....laravel.cloud) = <env-url>
+`ship` creates the application, the environment and the database, and deploys once. It is
+interactive, and it asks more than one thing. Passing `--name` removes the first prompt, and
+`--region=<region>` removes the next one if you already know which region you want — otherwise
+`ship` lists the available regions and you pick. Then it asks these, and here is what this
+deployment needs:
 
-# 3. Build command: install dependencies AND bake the binary into the artifact.
+| Prompt | Answer |
+| --- | --- |
+| Add local environment variables to Cloud environment? | **Select nothing.** Your `.env` holds `DB_CONNECTION=sqlite`, `QUEUE_CONNECTION=database` and `FILESYSTEM_DISK=local`. Copying any of those up is exactly what the rule above forbids. |
+| Enable any of the following features? | Select nothing. Matte needs no scheduler, no Octane and no server-side rendering. Scale-to-zero is a cost choice you can make later. |
+| Do you want to deploy the application? | Yes. |
+| Do you want to edit the build and deploy commands before deploying? | No — the next two commands set them properly. |
+| Open site in browser? / Do you want to check the logs? | Either. The first deploy has no binary and no queue yet, so a broken page here is expected. |
+
+`cloud repo:config` is interactive too, and binds this repository to the application.
+
+#### Configure the environment
+
+```shell
+# Capture the ids everything else needs.
+cloud application:get matte --json -n     # -> defaultEnvironmentId  (this is <env>)
+cloud environment:get <env> --json -n     # -> url  (this whole value, scheme included, is <env-url>)
+
+# Build command: install dependencies AND bake the binary into the artifact.
 cloud environment:update <env> -n --force \
   --build-command="composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader && php artisan matte:provision-binary"
 
-# 4. Deploy command: run migrations.
+# Deploy command: run migrations.
 cloud environment:update <env> --deploy-command="php artisan migrate --force" -n --force
 ```
 
-It has to be the **build** command in step 3, not the deploy command: files written during the build
-are baked into the artifact that ships to every web and worker instance, and files written during
-deploy are not.
+It has to be the **build** command, not the deploy command: files written during the build are baked
+into the artifact that ships to every web and worker instance, and files written during deploy are
+not.
 
-Two things the CLI cannot do for you today, both in the [Cloud dashboard](https://cloud.laravel.com):
+#### Attach the storage bucket (dashboard)
 
-- **Attach a storage bucket** — open your environment, go to **Storage**, attach a bucket. Cloud then
-  makes it the app's default disk and Matte follows it. Do not set `AWS_*` or `MATTE_DISK`.
-- **Create the managed queue** — create one in the environment's queue section, then make it the
-  default. Do not set `QUEUE_CONNECTION` or `MATTE_QUEUE_CONNECTION`.
+The CLI cannot attach a bucket to an environment. In the
+[Cloud dashboard](https://cloud.laravel.com), open your environment, go to **Storage**, and attach
+one. Cloud then makes it the app's default disk and Matte follows it. Do not set `AWS_*` or
+`MATTE_DISK`.
+
+#### Create the managed queue
+
+Run it without `-n`, because two of its answers matter and one of them has no flag:
 
 ```shell
+cloud managed-queue:create <env> --json        # answer the prompts, then note the id it returns
 cloud managed-queue:set-default <queue>
-
-# 5. Deploy, then poll until the deployment succeeds.
-cloud deploy matte main --no-wait -n         # -> <deployment-id>
-cloud deployment:get <deployment-id> --json -n
 ```
 
-Then **prove it works by exercising it**, never by reading settings back — the CLI is known to
-under-report what is attached:
+| Prompt | Answer |
+| --- | --- |
+| Queue name | **`default`** (the offered default). It has to match the queue Matte dispatches to, and Matte does not name a queue, so it uses the connection's `default`. A queue called anything else is created, costs money, and consumes nothing. |
+| Size | Pick one of the `mq-pro-*` sizes it lists. The smallest is enough to start with; it scales on queue depth. |
+| Maximum workers | The offered `3` is fine. |
+| Visibility timeout | Larger than the job timeout below. |
+| Timeout | **Larger than `MATTE_TIMEOUT`, which is 120 seconds.** This is the one with no command-line flag, and its default is 60 — which would kill a valid conversion from outside and leave the job stuck at `processing`. |
+| Polling interval / Shutdown timeout / Backoff / Tries | The offered defaults are fine. |
+
+You want **visibility timeout > job timeout > `MATTE_TIMEOUT`**. If you would rather take the CLI's
+60-second defaults, the other way to satisfy that is to set `MATTE_TIMEOUT` below 60 — an application
+setting, not resource configuration, so the rule above does not apply to it.
+
+Do not set `QUEUE_CONNECTION` or `MATTE_QUEUE_CONNECTION` — Cloud injects the first, and leaving the
+second unset is what makes Matte use it.
+
+#### Deploy
 
 ```shell
-# The worker can really convert. Must end with: PASS Real grabcut conversion
+cloud deploy matte main --no-wait -n         # -> <deployment-id>
+cloud deployment:get <deployment-id> --json -n   # poll until it reports succeeded
+```
+
+#### Prove it works by exercising it
+
+Never judge this by reading settings back — the CLI is known to under-report what is attached.
+
+```shell
+# 1. The binary is on the instance and converts. Must end with: PASS Real grabcut conversion
 cloud command:run <env> --cmd="php artisan matte:doctor" -n
 
-# The credential your consuming app will use. Revealed once; copy it into that app's secret manager.
+# 2. The credential your consuming app will use, minted in the DEPLOYED database. Revealed once.
 cloud command:run <env> --cmd="php artisan bfc:credential:mint installation 'acme-crm' --kind=bearer --purpose=consumption --name='matte-acme-crm' --local" -n
 ```
 
-```shell
-# A real conversion over HTTP. 200 and a PNG.
-curl -s -o out.png -w '%{http_code} %{content_type}\n' -F image=@sample.jpg \
-  -H "Authorization: Bearer $TOKEN" "https://<env-url>/v1/remove?sync=1"
+That second command prints a credential that is **not** the one from step 7 — different database,
+different credential. Load it into this shell the same hidden way, then run the checks:
 
-# And no credential is still 401.
-curl -s -o /dev/null -w '%{http_code}\n' -F image=@sample.jpg "https://<env-url>/v1/remove"
+```shell
+read -rs TOKEN        # paste the credential the command above printed
+
+# 3. No credential is still 401.
+curl -s -o /dev/null -w '%{http_code}\n' -F image=@sample.jpg "<env-url>/v1/remove"
+
+# 4. A conversion inside the request. 200 and image/png.
+curl -s -o sync.png -w '%{http_code} %{content_type}\n' -F image=@sample.jpg \
+  -H "Authorization: Bearer $TOKEN" "<env-url>/v1/remove?sync=1"
+```
+
+Steps 1 and 4 both convert inside the process that received them, so neither one touches the queue.
+**Do the asynchronous round-trip as well** — it is the only check that exercises the database, the
+bucket, the queue connection, the worker and the binary together, and it is the path your app will
+actually use:
+
+```shell
+# 5. Submit with no ?sync -> 202 and a job id.
+curl -s -F image=@sample.jpg -H "Authorization: Bearer $TOKEN" "<env-url>/v1/remove"
+# {"envelope_version":1,"job_id":"...","status":"queued"}
+
+# 6. Poll with that job id until it says "done". If it never leaves "queued", the queue is not
+#    draining: no default queue, or the workers are not running.
+curl -s -H "Authorization: Bearer $TOKEN" "<env-url>/v1/jobs/<job-id>"
+
+# 7. Fetch the result. 200 and image/png.
+curl -s -o async.png -w '%{http_code} %{content_type}\n' \
+  -H "Authorization: Bearer $TOKEN" "<env-url>/v1/jobs/<job-id>/result"
 ```
 
 The repository also carries an agent skill at
@@ -429,7 +524,7 @@ control — it is asking for a secret.
 database each:
 
 - Pointing at `http://127.0.0.1:8765`? Use the one from step 7.
-- Pointing at `https://<env-url>` on Cloud? Use the one minted by `cloud command:run` in step 10.
+- Pointing at your Cloud environment's URL? Use the one minted by `cloud command:run` in step 10.
   The step-7 credential is in your laptop's SQLite file and will only ever return `401` there.
 
 ```php
@@ -503,11 +598,17 @@ The four callback-scope values must match the destination registered on the Matt
 your OS and CPU; the three that exist are Linux x86_64, Linux arm64, and macOS on Apple Silicon.
 Use [step 6](#6-convert-an-image-without-a-linux-machine).
 
+**The binary downloaded, but nothing can start it** (`No such file or directory` on a file that is
+plainly there, or a loader error mentioning `GLIBC`). Your Linux uses musl rather than glibc
+(Alpine), or a glibc older than 2.34. The Linux builds need glibc 2.34 or newer — Debian 12,
+Ubuntu 22.04 or later. Nothing detects this before the download, because the platform check only
+looks at the operating system and CPU. Use [step 6](#6-convert-an-image-without-a-linux-machine).
+
 **`matte:doctor` says the binary is missing.** You have not run `php artisan matte:provision-binary`
 yet, or `MATTE_RUNTIME_PATH` points somewhere else than it did when you ran it.
 
 **`matte:provision-binary` dies with `Allowed memory size ... exhausted`.** It downloads the 178 MB
-ML model into memory in one piece. Raise the limit for that one command:
+model into memory in one piece. Raise the limit for that one command:
 `php -d memory_limit=-1 artisan matte:provision-binary`.
 
 **On macOS, `matte:doctor` fails on "dynamic library dependencies" even after
@@ -519,9 +620,16 @@ the Linux builds are unaffected. Use [step 6](#6-convert-an-image-without-a-linu
 deployed instance.
 
 **A job is stuck at `processing` and never finishes.** The worker started it and then died. Check
-your queue worker and your `failed_jobs` table. If the conversion binary crashes outright — rather
-than exiting with an error — the job row is left at `processing` and the queue job lands in
-`failed_jobs`.
+your queue worker and your `failed_jobs` table. Two known causes. The conversion binary crashed
+outright rather than exiting with an error, in which case the job row is left at `processing` and the
+queue job lands in `failed_jobs`. Or the worker's own timeout fired first: Laravel's worker kills a
+job at 60 seconds by default while Matte allows a conversion 120, so anything in between is killed
+from outside and the row never gets updated. Run the worker with `--timeout` above `MATTE_TIMEOUT`
+(see [step 9](#9-call-the-api)); on a Cloud managed queue, raise its job timeout or lower
+`MATTE_TIMEOUT` under it.
+
+**A job never leaves `queued`.** Nothing is consuming the queue. Locally, you have not started
+`php artisan queue:work`. On Cloud, there is no managed queue, or it was never made the default.
 
 **`POST /v1/remove?sync=1` returns `503`.** The binary or its libraries are not available on the
 machine handling the request. Run `matte:doctor` there.
