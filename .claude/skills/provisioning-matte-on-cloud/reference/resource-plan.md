@@ -27,7 +27,7 @@ cloud environment:get <env> --json -n        # → url (https://matte-<...>.lara
 cloud database-cluster:create --name matte --type neon_serverless_postgres_18 --region <region> --json -n
 cloud database:create <cluster-id> --name matte --json -n            # → <schema-id> (numeric)
 cloud environment:update <env> --database-id <schema-id> -n --force  # attaches; effective on deploy
-cloud environment:variables <env> --action set --key DB_CONNECTION --value pgsql -n --force
+#    Cloud injects DB_CONNECTION and DB_*; never set env vars for an attached Cloud resource.
 
 # 3. BINARY via BUILD command (bakes bg-remover-linux-arm64 into the artifact -> all instances)
 #    No MATTE_RUNTIME_PATH needed: runtime_path defaults to base_path('runtime') = /var/www/html/runtime.
@@ -69,12 +69,12 @@ curl -s "https://<env-url>/v1/jobs/<job_id>" -H "Authorization: Bearer <token>" 
 
 | Key | Value | Notes |
 | --- | --- | --- |
-| `DB_CONNECTION` | `pgsql` | DB_* host/db/user/password are Cloud-injected from the attached schema on deploy. |
+| `DB_CONNECTION` / `DB_*` | **unset** | Cloud injects the selector and credentials from the attached schema on deploy. App-defined values shadow the managed configuration. |
 | `MATTE_RUNTIME_PATH` | **unset** | Defaults to `base_path('runtime')` = `/var/www/html/runtime`, so the build-baked binary ships in the artifact. Set only to override. |
 | `MATTE_DISK` | **unset** | Defaults to `FILESYSTEM_DISK` (the injected `private` bucket disk). Set only to override. |
 | `MATTE_QUEUE_CONNECTION` | **unset** | Job dispatches on the app's default connection = the managed queue (after `set-default`). |
-| `MATTE_BG_REMOVER_TAG` | unset (default `v0.7.1`) | The pinned bg-remover release. |
-| `MATTE_MODEL_NAME` / `MATTE_MODEL_URL` | unset | Only for ML mode (`--model`); GrabCut is the no-model default. |
+| `MATTE_BG_REMOVER_TAG` | unset (default `v0.8.0`) | The pinned bg-remover release. |
+| `MATTE_MODEL_NAME` / `MATTE_MODEL_URL` | unset | The default ML mode uses the built-in model name and URL. Set only to override that model; GrabCut is the optional no-model mode. |
 
 ## Scale later
 

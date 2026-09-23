@@ -15,13 +15,17 @@ This **specializes** the generic `deploying-laravel-cloud` skill shipped by the 
 (`cloud <cmd> -h`), add `-n` to every command, `--json` on reads/creates, `--force` on updates/variable
 sets, and **confirm before any billable `:create`**.
 
+Cloud injects all configuration for attached resources, including connection selectors such as
+`DB_CONNECTION`, `QUEUE_CONNECTION`, and `FILESYSTEM_DISK`. **Never set environment variables for a
+Cloud-provisioned resource**: an app-defined value shadows Cloud's managed configuration.
+
 ## What gets provisioned (the Matte topology)
 
 | Resource | How | Notes |
 | --- | --- | --- |
 | App + default env + Postgres + first deploy | **`cloud ship`** (interactive, once) | One command does app+env+DB+instance+attach+deploy and resolves the org. Avoids the broken `instance:create`/`environment:update` attach paths. |
 | Repo binding | **`cloud repo:config`** (interactive, once) | Writes `.cloud/config.json` `{organization_id, application_id}` so later commands are non-interactive. |
-| Database attach | `environment:update --database-id <schemaId>` + a deploy | Takes effect **on deploy**; `environment:get` under-reports `databaseSchemaId` — verify by exercising, not by readback. Set `DB_CONNECTION=pgsql`. |
+| Database attach | `environment:update --database-id <schemaId>` + a deploy | Takes effect **on deploy**; `environment:get` under-reports `databaseSchemaId` — verify by exercising, not by readback. Cloud injects `DB_CONNECTION` and `DB_*`; do not set them yourself. |
 | **bg-remover binary** | **build command**: `… && php artisan matte:provision-binary` | No env var needed — `runtime_path` defaults to `base_path('runtime')` = `/var/www/html/runtime` on Cloud. Build-command fs changes persist into the artifact shipped to **every** instance (web + worker). Build runs arm64, so it fetches the correct `bg-remover-linux-arm64`. Deploy-command fs changes do NOT persist — don't use it for this. |
 | Object storage bucket | **dashboard** (env → Storage → attach) | The CLI can `bucket:create` org-level but cannot associate to an env. Once attached, Cloud injects a `private` S3 disk + `FILESYSTEM_DISK=private` as the default — Matte uses it automatically (`MATTE_DISK` defaults to `FILESYSTEM_DISK`). You never handle the R2 secret. |
 | Managed queue | **dashboard** on v0.5.0 (`managed-queue:create` is bugged — always sends `min_replicas`) | The worker. Once created, `managed-queue:set-default` and leave `MATTE_QUEUE_CONNECTION` unset so jobs dispatch on the default connection. |
@@ -48,7 +52,8 @@ Capture ids from `cloud application:get <app> --json -n` (→ `defaultEnvironmen
    `php artisan matte:provision-binary` (see resource-plan). No `MATTE_RUNTIME_PATH` needed — the default
    already resolves to `/var/www/html/runtime`.
 2. **Database** — if `ship` didn't fully provision it (check `databaseSchemaId`/exercise): create a Neon
-   cluster + schema, `environment:update <env> --database-id <schemaId> -n --force`, set `DB_CONNECTION=pgsql`.
+   cluster + schema, then `environment:update <env> --database-id <schemaId> -n --force`. Leave
+   `DB_CONNECTION` and every `DB_*` variable unset so Cloud's injected configuration is used.
 3. **Bucket** — have the user attach a bucket to the env in the **dashboard** (Storage tab). Then it's the
    default disk; `MATTE_DISK` needs no value.
 4. **Managed queue** — create in the **dashboard** (v0.5.0 CLI bug), then `managed-queue:set-default`.
@@ -77,8 +82,8 @@ per-image compute is a fraction of a cent). **Wait for approval before any `:cre
 ## Step 5 — Hand off (the consuming app)
 
 Once the Matte client package ships (Phase 2): in a consuming app, `composer require artisan-build/matte-client`
-then `php artisan matte:install --url=https://<env-url> --token=<plaintext>`. Until then, any HTTP client
-POSTs to `/v1/remove` directly — `matte-contracts` is the public wire contract.
+then run `php artisan matte:install` and answer its URL and token prompts. Until then, any HTTP client POSTs
+to `/v1/remove` directly — `matte-contracts` is the public wire contract.
 
 ## Notes
 
