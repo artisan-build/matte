@@ -16,14 +16,12 @@ it('ships a local session driver that persists across requests', function (): vo
         $this->app['config']->set('session.driver', $sessionDriver);
         $this->app->forgetInstance('session');
         $this->app->forgetInstance('session.store');
-        $this->app->bind(PreventRequestForgery::class, function ($app): PreventRequestForgery {
-            return new class($app, $app['encrypter']) extends PreventRequestForgery
+        $this->app->bind(PreventRequestForgery::class, fn ($app): PreventRequestForgery => new class($app, $app['encrypter']) extends PreventRequestForgery
+        {
+            protected function runningUnitTests(): bool
             {
-                protected function runningUnitTests(): bool
-                {
-                    return false;
-                }
-            };
+                return false;
+            }
         });
     };
 
@@ -32,7 +30,7 @@ it('ships a local session driver that persists across requests', function (): vo
     $pdo = $database->getPdo();
 
     $login = $this->get('/bfc/login')->assertOk();
-    preg_match('/name="_token" value="([^"]+)"/', $login->getContent(), $matches);
+    preg_match('/name="_token" value="([^"]+)"/', (string) $login->getContent(), $matches);
 
     expect($matches[1] ?? null)->toBeString()->not->toBeEmpty();
 
