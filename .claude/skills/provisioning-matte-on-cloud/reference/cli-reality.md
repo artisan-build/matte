@@ -28,7 +28,8 @@ Cloud team is aware of several of these.
 - `environment:update <env> --database-id <schemaId> -n --force` — **attaches the DB; takes effect on the
   next deploy.** `environment:get` keeps reporting `databaseSchemaId: null` even when it's attached — a
   readback gap, NOT a no-op. **Verify by exercising** (`migrate --force` in the deploy command succeeds;
-  `migrate:status` lists `matte_jobs`). Set `DB_CONNECTION=pgsql`.
+  `migrate:status` lists `matte_jobs`). Cloud injects `DB_CONNECTION` and `DB_*`; never set environment
+  variables for the attached database because app-defined values shadow the managed configuration.
 - `environment:update <env> --build-command="…" --deploy-command="…" -n --force` — sets the build/deploy
   commands. **Build-command filesystem changes persist into the artifact shipped to all instances;
   deploy-command changes do NOT persist** (Cloud docs). So provision the binary in the **build** command.
