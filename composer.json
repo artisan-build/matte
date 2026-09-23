@@ -12,6 +12,7 @@
     "require": {
         "php": "^8.3",
         "artisan-build/built-for-cloud": "^0.16.0",
+        "artisan-build/hone-client": "^1.4",
         "artisan-build/matte-server": "^2.0",
         "aws/aws-sdk-php": "^3.384",
         "laravel/chisel": "^0.1.0",

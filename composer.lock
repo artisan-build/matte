@@ -4,8 +4,67 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9c8c3eb1aa52fb107bd009251dbfe05c",
+    "content-hash": "3967391c30ab82ea45508ba33a4d57ed",
     "packages": [
+        {
+            "name": "artisan-build/bfc-client",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/artisan-build/bfc-client.git",
+                "reference": "ebaafd3193af7a45bc00746d423b25c122ab4c68"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/artisan-build/bfc-client/zipball/ebaafd3193af7a45bc00746d423b25c122ab4c68",
+                "reference": "ebaafd3193af7a45bc00746d423b25c122ab4c68",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/cache": "^13.0",
+                "illuminate/contracts": "^13.0",
+                "illuminate/filesystem": "^13.0",
+                "illuminate/http": "^13.0",
+                "illuminate/routing": "^13.0",
+                "illuminate/support": "^13.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.9",
+                "laravel/pint": "^1.27",
+                "orchestra/testbench": "^11.0",
+                "pestphp/pest": "^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ArtisanBuild\\BfcClient\\BfcClientServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ArtisanBuild\\BfcClient\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Client-side Built for Cloud package: stable client identity and proof-of-life for BfC client applications.",
+            "keywords": [
+                "artisan-build",
+                "built-for-cloud",
+                "laravel",
+                "laravel-cloud"
+            ],
+            "support": {
+                "issues": "https://github.com/artisan-build/bfc-client/issues",
+                "source": "https://github.com/artisan-build/bfc-client/tree/v0.1.1"
+            },
+            "time": "2026-08-24T11:55:48+00:00"
+        },
         {
             "name": "artisan-build/built-for-cloud",
             "version": "v0.16.0",
@@ -74,6 +133,107 @@
                 "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.16.0"
             },
             "time": "2026-09-22T02:43:56+00:00"
+        },
+        {
+            "name": "artisan-build/hone-client",
+            "version": "v1.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/artisan-build/hone-client.git",
+                "reference": "0f6f2265ceb1f42d7cf2a6cabbe00b0da0afa3bf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/artisan-build/hone-client/zipball/0f6f2265ceb1f42d7cf2a6cabbe00b0da0afa3bf",
+                "reference": "0f6f2265ceb1f42d7cf2a6cabbe00b0da0afa3bf",
+                "shasum": ""
+            },
+            "require": {
+                "artisan-build/bfc-client": "^0.1",
+                "artisan-build/hone-contracts": "^1.0",
+                "illuminate/contracts": "^13.0",
+                "illuminate/support": "^13.0",
+                "laravel/nightwatch": "^1.28",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.27",
+                "orchestra/testbench": "^11.0",
+                "pestphp/pest": "^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ArtisanBuild\\HoneClient\\HoneClientServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ArtisanBuild\\HoneClient\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Routes a Laravel app's own laravel/nightwatch telemetry to a self-hosted Hone server. Installed in monitored apps.",
+            "keywords": [
+                "hone",
+                "laravel",
+                "nightwatch",
+                "observability",
+                "telemetry"
+            ],
+            "support": {
+                "source": "https://github.com/artisan-build/hone-client/tree/v1.4.0"
+            },
+            "time": "2026-09-23T15:29:32+00:00"
+        },
+        {
+            "name": "artisan-build/hone-contracts",
+            "version": "v1.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/artisan-build/hone-contracts.git",
+                "reference": "f97d0b2b37a93609e53524253d30e3696bcef2f5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/artisan-build/hone-contracts/zipball/f97d0b2b37a93609e53524253d30e3696bcef2f5",
+                "reference": "f97d0b2b37a93609e53524253d30e3696bcef2f5",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.27",
+                "pestphp/pest": "^4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ArtisanBuild\\HoneContracts\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "The versioned wire envelope shared between hone-client and hone-server. The single place Hone's wire compatibility lives.",
+            "keywords": [
+                "contracts",
+                "hone",
+                "laravel",
+                "nightwatch",
+                "telemetry"
+            ],
+            "support": {
+                "source": "https://github.com/artisan-build/hone-contracts/tree/v1.4.0"
+            },
+            "time": "2026-09-23T15:29:37+00:00"
         },
         {
             "name": "artisan-build/matte-contracts",
@@ -1893,6 +2053,100 @@
                 "source": "https://github.com/laravel/framework"
             },
             "time": "2026-08-18T20:31:28+00:00"
+        },
+        {
+            "name": "laravel/nightwatch",
+            "version": "v1.30.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/nightwatch.git",
+                "reference": "123f0f24e3e3f4b732f04cdac3a0c63156f8efec"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/nightwatch/zipball/123f0f24e3e3f4b732f04cdac3a0c63156f8efec",
+                "reference": "123f0f24e3e3f4b732f04cdac3a0c63156f8efec",
+                "shasum": ""
+            },
+            "require": {
+                "ext-zlib": "*",
+                "guzzlehttp/promises": "^2.0|^3.0",
+                "laravel/framework": "^10.0|^11.0|^12.0|^13.0",
+                "monolog/monolog": "^3.6",
+                "nesbot/carbon": "^2.0|^3.0",
+                "php": "^8.2",
+                "psr/http-message": "^1.0|^2.0",
+                "psr/log": "^1.0|^2.0|^3.0",
+                "ramsey/uuid": "^4.0",
+                "symfony/console": "^6.0|^7.0|^8.0",
+                "symfony/http-foundation": "^6.0|^7.0|^8.0",
+                "symfony/polyfill-php84": "^1.29"
+            },
+            "require-dev": {
+                "aws/aws-sdk-php": "^3.349",
+                "ext-pcntl": "*",
+                "ext-pdo": "*",
+                "guzzlehttp/guzzle": "^7.0|^8.0",
+                "guzzlehttp/psr7": "^2.0|^3.0",
+                "laravel/horizon": "^5.4",
+                "laravel/pint": "1.21.0",
+                "laravel/vapor-core": "^2.38.2",
+                "livewire/livewire": "^2.0|^3.0",
+                "mockery/mockery": "^1.0",
+                "mongodb/laravel-mongodb": "^4.0|^5.0",
+                "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
+                "orchestra/testbench-core": "^8.0|^9.0|^10.0|^11.0",
+                "orchestra/workbench": "^8.0|^9.0|^10.0|^11.0",
+                "phpstan/phpstan": "^1.0",
+                "phpunit/phpunit": "^10.0|^11.0|^12.0",
+                "singlestoredb/singlestoredb-laravel": "^1.0|^2.0",
+                "spatie/laravel-ignition": "^2.0",
+                "symfony/mailer": "^6.0|^7.0|^8.0",
+                "symfony/mime": "^6.0|^7.0|^8.0",
+                "symfony/var-dumper": "^6.0|^7.0|^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Nightwatch": "Laravel\\Nightwatch\\Facades\\Nightwatch"
+                    },
+                    "providers": [
+                        "Laravel\\Nightwatch\\NightwatchServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "agent/helpers.php"
+                ],
+                "psr-4": {
+                    "Laravel\\Nightwatch\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                }
+            ],
+            "description": "The official Laravel Nightwatch package.",
+            "homepage": "https://nightwatch.laravel.com",
+            "keywords": [
+                "Insights",
+                "laravel",
+                "monitoring"
+            ],
+            "support": {
+                "docs": "https://nightwatch.laravel.com/docs",
+                "issues": "https://github.com/laravel/nightwatch/issues",
+                "source": "https://github.com/laravel/nightwatch"
+            },
+            "time": "2026-09-18T00:37:28+00:00"
         },
         {
             "name": "laravel/prompts",
