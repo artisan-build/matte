@@ -7,7 +7,7 @@ return [
         'name' => 'Matte',
         'slug' => 'matte',
         'description' => 'Background removal as an API you own: submit an image, poll the job, fetch a transparent PNG.',
-        'icon' => 'https://scalpels.app/products/matte/icon.svg',
+        'icon' => 'https://scalpels.app/img/products/transparent/matte.svg',
         'product_url' => 'https://scalpels.app/products/matte',
     ],
 
