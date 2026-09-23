@@ -16,6 +16,9 @@ return RectorConfig::configure()
         __DIR__.'/routes',
         __DIR__.'/tests',
     ])
+    ->withSkip([
+        __DIR__.'/bootstrap/cache',
+    ])
     ->withPhpSets(php83: true)
     ->withSets([
         LaravelLevelSetList::UP_TO_LARAVEL_120,
