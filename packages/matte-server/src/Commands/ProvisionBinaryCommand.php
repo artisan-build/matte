@@ -49,7 +49,7 @@ final class ProvisionBinaryCommand extends Command
             return 'already present';
         }
 
-        $tag = (string) config('matte-server.bg_remover_tag', 'v0.7.1');
+        $tag = (string) config('matte-server.bg_remover_tag', 'v0.8.0');
         $asset = $locator->binaryName();
         $baseUrl = "https://github.com/artisan-build/bg-remover/releases/download/{$tag}";
         $binaryPath = $locator->binaryPath();
