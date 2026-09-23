@@ -152,17 +152,15 @@ php artisan matte:provision-binary
 This downloads three things into a `runtime/` folder: the `bg-remover` program built for your
 operating system and CPU, the ONNX Runtime library it needs (ONNX Runtime is the engine that runs
 machine-learning models), and the default model. The program
-itself is checked against the checksum published with the release. `runtime/` is ignored by Git.
+itself is checked against the checksum published with the release. Downloads stream directly to
+disk, so the 178 MB model does not need to fit within PHP's memory limit. `runtime/` is ignored by Git.
 
 You should see `Matte binary provisioning complete.` followed by a line for each of the three files,
 each ending in `downloaded`. Run the command again and they say `already present` instead; `--force`
 downloads them afresh.
 
-Two ways this fails. On a platform with no build it raises `UnsupportedPlatform` and names your OS
-and CPU — skip to [step 6](#6-convert-an-image-without-a-linux-machine). And the default model is
-178 MB, which the command reads into memory in one go, so a PHP with a `memory_limit` under about
-200 MB dies with `Allowed memory size ... exhausted`. If that happens, run
-`php -d memory_limit=-1 artisan matte:provision-binary` instead.
+On a platform with no build it raises `UnsupportedPlatform` and names your OS and CPU — skip to
+[step 6](#6-convert-an-image-without-a-linux-machine).
 
 ### 5. Check the runtime
 
@@ -195,12 +193,11 @@ conversion. If you have Docker, this works from your checkout:
 ```shell
 rm -rf runtime
 docker run --rm -v "$PWD:/app" -w /app php:8.4-cli \
-  bash -c "php -d memory_limit=-1 artisan matte:provision-binary && php artisan matte:doctor"
+  bash -c "php artisan matte:provision-binary && php artisan matte:doctor"
 ```
 
 All four checks print `PASS` and the command exits `0`. `rm -rf runtime` clears anything provisioned
-for another platform; `-d memory_limit=-1` is there because the stock PHP image allows 128 MB and the
-model is 178 MB.
+for another platform.
 
 To convert one of your own images, put it in the checkout and run the CLI converter the same way:
 
@@ -606,10 +603,6 @@ looks at the operating system and CPU. Use [step 6](#6-convert-an-image-without-
 
 **`matte:doctor` says the binary is missing.** You have not run `php artisan matte:provision-binary`
 yet, or `MATTE_RUNTIME_PATH` points somewhere else than it did when you ran it.
-
-**`matte:provision-binary` dies with `Allowed memory size ... exhausted`.** It downloads the 178 MB
-model into memory in one piece. Raise the limit for that one command:
-`php -d memory_limit=-1 artisan matte:provision-binary`.
 
 **On macOS, `matte:doctor` fails on "dynamic library dependencies" even after
 `brew install opencv onnxruntime`.** The macOS build of `bg-remover v0.8.0` links against OpenCV

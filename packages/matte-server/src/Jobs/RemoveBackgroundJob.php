@@ -67,6 +67,14 @@ final class RemoveBackgroundJob implements ShouldQueue
         $this->deliverCallback($matteJob->refresh());
     }
 
+    public function failed(?Throwable $exception): void
+    {
+        MatteJob::query()->find($this->matteJobId)?->forceFill([
+            'status' => JobStatus::Failed,
+            'error' => $exception?->getMessage() ?: 'Background removal failed.',
+        ])->save();
+    }
+
     private function deliverCallback(MatteJob $matteJob): void
     {
         if ($this->callbackDestination === null) {

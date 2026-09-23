@@ -9,6 +9,7 @@ use ArtisanBuild\BuiltForCloud\CredentialPurpose;
 use ArtisanBuild\BuiltForCloud\Hmac\HmacEnvelope;
 use ArtisanBuild\BuiltForCloud\Hmac\HmacVerifier;
 use ArtisanBuild\BuiltForCloud\MintOptions;
+use ArtisanBuild\MatteContracts\JobStatus;
 use ArtisanBuild\MatteContracts\JobStatusEnvelope;
 use ArtisanBuild\MatteContracts\Mode;
 use ArtisanBuild\MatteContracts\Preset;
@@ -19,10 +20,14 @@ use ArtisanBuild\MatteServer\Converter;
 use ArtisanBuild\MatteServer\Jobs\RemoveBackgroundJob;
 use ArtisanBuild\MatteServer\MatteJob;
 use ArtisanBuild\MatteServer\OutputKey;
+use Illuminate\Queue\MaxAttemptsExceededException;
+use Illuminate\Queue\TimeoutExceededException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\Exception\ProcessSignaledException;
+use Symfony\Component\Process\Process as SymfonyProcess;
 
 it('processes a queued removal when host dependencies are available', function (): void {
     $this->artisan('migrate')->assertExitCode(0);
@@ -65,6 +70,59 @@ it('processes a queued removal when host dependencies are available', function (
         removeDirectory($runtimePath);
     }
 });
+
+it('marks a queued removal failed when its process is signalled', function (): void {
+    $this->artisan('migrate')->assertExitCode(0);
+
+    Storage::fake('matte-test');
+    Storage::disk('matte-test')->put('inputs/input.png', 'image-bytes');
+
+    $process = Mockery::mock(SymfonyProcess::class);
+    $process->expects('getTermSignal')->andReturn(6);
+    $exception = new ProcessSignaledException($process);
+
+    Process::fake(fn () => throw $exception);
+
+    $matteJob = MatteJob::factory()->create([
+        'input_ref' => 'inputs/input.png',
+        'status' => JobStatus::Processing,
+    ]);
+
+    try {
+        dispatch_sync(new RemoveBackgroundJob(
+            $matteJob->id,
+            new RemovalOptions(mode: Mode::Grabcut, preset: Preset::Fast),
+            'matte-test',
+            'inputs/input.png',
+            'outputs/result.png',
+        ));
+    } catch (ProcessSignaledException) {
+        // The queue failure remains observable after its durable state is updated.
+    }
+
+    expect($matteJob->refresh()->status)->toBe(JobStatus::Failed)
+        ->and($matteJob->error)->toBe('The process has been signaled with signal "6".');
+});
+
+it('marks a queued removal failed after a terminal queue failure', function (Throwable $exception): void {
+    $this->artisan('migrate')->assertExitCode(0);
+
+    $matteJob = MatteJob::factory()->create(['status' => JobStatus::Processing]);
+
+    (new RemoveBackgroundJob(
+        $matteJob->id,
+        new RemovalOptions(mode: Mode::Grabcut, preset: Preset::Fast),
+        'matte-test',
+        'inputs/input.png',
+        'outputs/result.png',
+    ))->failed($exception);
+
+    expect($matteJob->refresh()->status)->toBe(JobStatus::Failed)
+        ->and($matteJob->error)->toBe($exception->getMessage());
+})->with([
+    'maximum attempts exhausted' => new MaxAttemptsExceededException('The job has been attempted too many times.'),
+    'worker timeout' => new TimeoutExceededException('The job has timed out.'),
+]);
 
 it('sends the exact terminal body to a registered destination with a package-bound signature', function (): void {
     $this->artisan('migrate')->assertExitCode(0);

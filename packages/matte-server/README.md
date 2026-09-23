@@ -84,7 +84,7 @@ Env vars (all `MATTE_*` keys live in `config/matte-server.php`):
 | --- | --- |
 | `MATTE_DISK` | Storage disk for originals + outputs. Defaults to `FILESYSTEM_DISK` (the bucket Cloud injects), then `local`. |
 | `MATTE_RUNTIME_PATH` | Optional override for where the binary is provisioned. Defaults to `base_path('runtime')` — a location inside the deploy artifact, so the build-provisioned binary ships to every instance. |
-| `MATTE_BG_REMOVER_TAG` | Pinned `bg-remover` release (default `v0.7.1`). |
+| `MATTE_BG_REMOVER_TAG` | Pinned `bg-remover` release (default `v0.8.0`). |
 | `MATTE_QUEUE_CONNECTION` | Queue for the removal job. Leave unset to use the app default (the managed queue). |
 | `MATTE_CALLBACK_TIMEOUT`, `MATTE_CALLBACK_CONNECT_TIMEOUT` | Total and connection timeout for best-effort registered callback delivery. |
 | `MATTE_DEFAULT_MODE`, `MATTE_TIMEOUT`, `MATTE_MODEL_NAME`, `MATTE_MODEL_URL`, `MATTE_ROUTE_PREFIX` | Defaults / tuning. |

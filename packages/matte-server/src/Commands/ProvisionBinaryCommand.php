@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 final class ProvisionBinaryCommand extends Command
 {
@@ -48,7 +49,7 @@ final class ProvisionBinaryCommand extends Command
             return 'already present';
         }
 
-        $tag = (string) config('matte-server.bg_remover_tag', 'v0.7.1');
+        $tag = (string) config('matte-server.bg_remover_tag', 'v0.8.0');
         $asset = $locator->binaryName();
         $baseUrl = "https://github.com/artisan-build/bg-remover/releases/download/{$tag}";
         $binaryPath = $locator->binaryPath();
@@ -57,7 +58,7 @@ final class ProvisionBinaryCommand extends Command
         $expectedHash = $this->checksumForAsset($checksums, $asset);
         $temporaryPath = $binaryPath.'.download';
 
-        file_put_contents($temporaryPath, $this->download("{$baseUrl}/{$asset}"));
+        $this->downloadTo("{$baseUrl}/{$asset}", $temporaryPath);
 
         $actualHash = hash_file('sha256', $temporaryPath);
 
@@ -88,9 +89,9 @@ final class ProvisionBinaryCommand extends Command
         $archivePath = $locator->runtimePath().'/'.$onnx['tgz'];
         $extractPath = $locator->runtimePath().'/onnxruntime-extract';
 
-        file_put_contents(
+        $this->downloadTo(
+            "https://github.com/microsoft/onnxruntime/releases/download/v{$version}/{$onnx['tgz']}",
             $archivePath,
-            $this->download("https://github.com/microsoft/onnxruntime/releases/download/v{$version}/{$onnx['tgz']}")
         );
 
         $this->removeDirectory($extractPath);
@@ -139,7 +140,10 @@ final class ProvisionBinaryCommand extends Command
             return $modelPath.' (already present)';
         }
 
-        file_put_contents($modelPath, $this->download($modelUrl));
+        $temporaryPath = $modelPath.'.download';
+
+        $this->downloadTo($modelUrl, $temporaryPath);
+        rename($temporaryPath, $modelPath);
 
         return $modelPath.' (downloaded)';
     }
@@ -152,6 +156,24 @@ final class ProvisionBinaryCommand extends Command
             ->get($url)
             ->throw()
             ->body();
+    }
+
+    private function downloadTo(string $url, string $path): void
+    {
+        @unlink($path);
+
+        try {
+            Http::retry([250, 500, 1000])
+                ->timeout(120)
+                ->connectTimeout(15)
+                ->sink($path)
+                ->get($url)
+                ->throw();
+        } catch (Throwable $exception) {
+            @unlink($path);
+
+            throw $exception;
+        }
     }
 
     private function checksumForAsset(string $checksums, string $asset): string
