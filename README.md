@@ -248,15 +248,9 @@ Two companions: `php artisan bfc:credential:list --local` shows what exists (nev
 You do not need a user account to run Matte, and the administration page has nothing in it that the
 commands above do not do better. If you want one anyway, two steps.
 
-First, make sessions survive between requests. `.env.example` ships `SESSION_DRIVER=array`, which
-keeps a session in memory for one request only, so signing in cannot work: the login form always
-comes back `419`. Set this in your `.env`:
-
-```
-SESSION_DRIVER=file
-```
-
-Do not set it to `database` — the auth package refuses to boot with database sessions.
+`.env.example` ships `SESSION_DRIVER=cookie`, so sessions already survive between requests without
+requiring database-backed session storage. If you customize the driver, do not use `array` outside
+tests because it cannot preserve the sign-in session between requests.
 
 Then create the Owner. It prompts for an email, a name and a password of eight characters or more:
 
@@ -634,7 +628,7 @@ installation-owned credentials and signed-in users' own credentials are admitted
 `php artisan bfc:credential:list --local` shows what exists on the environment you run it in.
 
 **The sign-in form returns `419`.** `SESSION_DRIVER=array` cannot hold a session between two
-requests, so the CSRF token never matches. Set `SESSION_DRIVER=file` — see
+requests, so the CSRF token never matches. Set `SESSION_DRIVER=cookie` — see
 [step 8](#8-optional-the-sign-in-page).
 
 **A request returns `422` saying the client is ahead of this Matte instance.** The caller is speaking
