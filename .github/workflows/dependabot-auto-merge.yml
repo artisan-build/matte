@@ -1,0 +1,68 @@
+name: dependabot auto-merge
+
+# Merges low-risk Dependabot PRs without a human, so routine dependency maintenance stops depending
+# on somebody remembering to look. Patch and minor only — majors always wait for a person.
+#
+# This does NOT merge anything on its own: it asks GitHub to enable auto-merge, and GitHub then
+# merges only once every required status check on `main` has passed. The required checks are what
+# make "on green CI" true, so this workflow is only meaningful on a repository that has them. See
+# the Dependency Maintenance section of README.md.
+#
+# NOTE: this file is export-ignored in .gitattributes and does not ship into projects scaffolded
+# from the kit. It depends on repository settings ("Allow auto-merge", plus required status checks)
+# that a fresh repo will not have, and without them a PR is immediately mergeable — so the same file
+# in a fresh repo would merge dependency updates with no CI gate at all. The `github.repository`
+# guard below is a second line of defence for exactly that case.
+
+on: pull_request
+
+# `pull_request`, not `pull_request_target`, following GitHub's documented sample. Dependabot-triggered
+# runs get a read-only token by default, which this block lifts for the two scopes actually needed.
+# Nothing here checks out or executes PR code — it reads metadata and calls the API — so none of the
+# usual pull_request_target risks are in play.
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+
+    # Second condition means a copy of this file in a fork or scaffolded project does nothing.
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.repository == 'artisan-build/matte'
+
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Composer only, and here is why: a github-actions update by definition edits files under
+      # .github/workflows, and GITHUB_TOKEN is refused on any merge that touches them —
+      #
+      #   refusing to allow a GitHub App to create or update workflow `.github/workflows/tests.yml`
+      #   without `workflows` permission
+      #
+      # `workflows` is not a scope that can be granted in the permissions block above; it is a
+      # GitHub App permission GITHUB_TOKEN structurally does not have. Lifting it needs a PAT or App
+      # token with workflow scope stored as a repository secret, which is a real increase in attack
+      # surface on a public repo and a deliberate decision rather than a default. Without this guard
+      # every github-actions PR ends in a red X that looks like breakage but is a permission wall.
+      #
+      # Little is lost: advisories arrive through composer, which is what this automation is for.
+      # Action bumps are a few PRs a year and get merged by hand.
+      #
+      # The update-type check is an allowlist rather than `!= 'version-update:semver-major'` so it
+      # fails closed: an empty or unrecognised value blocks the merge instead of allowing it. For a
+      # grouped PR it is the highest bump in the group, so one minor among patches counts as minor.
+      - name: Enable auto-merge for patch and minor updates
+        if: >-
+          steps.metadata.outputs.package-ecosystem == 'composer' &&
+          contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
