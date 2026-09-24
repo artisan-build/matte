@@ -11,12 +11,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "artisan-build/built-for-cloud": "^0.16.0",
+        "artisan-build/built-for-cloud": "^0.17",
         "artisan-build/hone-client": "^1.4",
         "artisan-build/matte-server": "^2.0",
         "aws/aws-sdk-php": "^3.384",
         "laravel/chisel": "^0.1.0",
-        "laravel/framework": "^13.7",
+        "laravel/framework": "^13.24",
         "laravel/tinker": "^3.0",
         "league/flysystem-aws-s3-v3": "^3.34"
     },
