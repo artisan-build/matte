@@ -49,6 +49,9 @@ jobs:
       - name: Prepare SQLite Database
         run: touch database/database.sqlite
 
+      - name: Run Rector
+        run: composer rector:check
+
       - name: Run PHPStan
         run: composer stan
 

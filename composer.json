@@ -81,6 +81,9 @@
         "rector": [
             "rector process"
         ],
+        "rector:check": [
+            "rector process --dry-run"
+        ],
         "stan": [
             "phpstan analyse --memory-limit=512M"
         ],
