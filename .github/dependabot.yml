@@ -1,0 +1,53 @@
+version: 2
+
+updates:
+  # PHP dependencies.
+  #
+  # This kit has no git tags, so `laravel new --using=` resolves `dev-main`: whatever sits in
+  # composer.lock on main is inherited by every project scaffolded from the kit, immediately. That
+  # makes stale transitive dependencies here a downstream problem, not just a local one.
+  - package-ecosystem: composer
+    directory: "/"
+    schedule:
+      interval: weekly
+    # Raise the composer.json constraint only when the new version falls outside the existing range;
+    # otherwise move composer.lock alone. Lock movement should be routine, constraint movement
+    # deliberate.
+    versioning-strategy: increase-if-necessary
+    groups:
+      # Batch patch + minor into a single weekly PR. One PR per package would mean 20+ PRs a week on
+      # a starter kit, and a queue that large stops being read — which is the exact failure this
+      # config exists to prevent.
+      composer:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+      composer-security:
+        applies-to: security-updates
+        update-types:
+          - minor
+          - patch
+    # Majors are deliberately absent from both groups. Dependabot opens them individually, and they
+    # are never auto-merged (see dependabot-auto-merge.yml) — a human decides.
+
+  # GitHub Actions.
+  #
+  # tests.yml and lint.yml pin actions/checkout and shivammathur/setup-php by full commit SHA, which
+  # is correct practice but means a pin ages silently forever: there is no version string for a human
+  # to notice going stale. Dependabot rewrites the SHA and its trailing `# v6` comment together.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+      github-actions-security:
+        applies-to: security-updates
+        update-types:
+          - minor
+          - patch
