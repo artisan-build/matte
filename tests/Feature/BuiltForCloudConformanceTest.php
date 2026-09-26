@@ -160,9 +160,10 @@ it('matches the canonical Matte manifest and preserves the public routes', funct
         'product_url' => 'https://scalpels.app/products/matte',
     ]);
 
-    $this->getJson('/')
+    $this->get(route('bfc.landing'))
         ->assertOk()
-        ->assertExactJson(['name' => 'Matte', 'status' => 'ok']);
+        ->assertSee('Matte')
+        ->assertSee(route('bfc.dashboard'), false);
     $this->get('/up')->assertOk();
 });
 

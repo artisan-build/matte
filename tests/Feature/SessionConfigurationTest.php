@@ -61,7 +61,7 @@ it('ships a local session driver that persists across requests', function (): vo
             'email' => $email,
             'password' => $password,
         ])
-        ->assertRedirect(route('bfc.ui.home', absolute: false));
+        ->assertRedirect(route('bfc.dashboard', absolute: false));
 
     foreach ($authenticated->headers->getCookies() as $cookie) {
         $cookies[$cookie->getName()] = (string) $cookie->getValue();
@@ -72,7 +72,7 @@ it('ships a local session driver that persists across requests', function (): vo
     $this->app->make('db')->connection()->setPdo($pdo);
 
     $this->withUnencryptedCookies($cookies)
-        ->get('/bfc/ui')
+        ->get(route('bfc.ui.home'))
         ->assertOk()
         ->assertSeeHtml('data-testid="ui-shell"')
         ->assertSee('Matte');

@@ -2,13 +2,11 @@
 
 use Illuminate\Support\Facades\Artisan;
 
-it('boots the headless Matte app root route', function (): void {
-    $this->getJson(route('home'))
+it('serves the package-owned Matte landing page', function (): void {
+    $this->get(route('bfc.landing'))
         ->assertOk()
-        ->assertJson([
-            'name' => 'Matte',
-            'status' => 'ok',
-        ]);
+        ->assertSee('Matte')
+        ->assertSee(route('bfc.dashboard'), false);
 });
 
 it('keeps the health endpoint public', function (): void {
