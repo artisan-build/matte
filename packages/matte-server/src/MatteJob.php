@@ -9,6 +9,7 @@ use ArtisanBuild\MatteServer\Database\Factories\MatteJobFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property string $id
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $model
  * @property JobStatus $status
  * @property string|null $error
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  */
 final class MatteJob extends Model
 {

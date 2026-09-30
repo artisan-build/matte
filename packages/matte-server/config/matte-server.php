@@ -13,6 +13,10 @@ return [
     'timeout' => (int) env('MATTE_TIMEOUT', 120),
     'default_mode' => env('MATTE_DEFAULT_MODE', 'ml'),
     'route_prefix' => env('MATTE_ROUTE_PREFIX', ''),
+    'mcp' => [
+        'path' => '/mcp',
+        'delegated' => true,
+    ],
     'callback' => [
         'timeout' => (int) env('MATTE_CALLBACK_TIMEOUT', 5),
         'connect_timeout' => (int) env('MATTE_CALLBACK_CONNECT_TIMEOUT', 2),
