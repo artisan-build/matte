@@ -33,7 +33,8 @@ final class MatteServerServiceProvider extends ServiceProvider
             ->group(__DIR__.'/../routes/matte-server.php');
 
         $this->app->booted(function (): void {
-            Mcp::web((string) config('matte-server.mcp.path'), MatteMcpServer::class);
+            Mcp::web((string) config('matte-server.mcp.path'), MatteMcpServer::class)
+                ->middleware('bfc.mcp:product,read');
         });
 
         if ($this->app->runningInConsole()) {
