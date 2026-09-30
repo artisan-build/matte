@@ -32,11 +32,11 @@ final class McpInput
 
     public static function optionalString(Request $request, string $key, int $max): ?string
     {
-        $value = $request->get($key);
-
-        if ($value === null) {
+        if (! array_key_exists($key, $request->all())) {
             return null;
         }
+
+        $value = $request->get($key);
 
         if (! is_string($value) || $value === '' || strlen($value) > $max) {
             self::fail($key, "The {$key} argument is invalid.");
@@ -59,11 +59,11 @@ final class McpInput
     /** @param list<string> $allowed */
     public static function optionalEnum(Request $request, string $key, array $allowed): ?string
     {
-        $value = $request->get($key);
-
-        if ($value === null) {
+        if (! array_key_exists($key, $request->all())) {
             return null;
         }
+
+        $value = $request->get($key);
 
         if (! is_string($value) || ! in_array($value, $allowed, true)) {
             self::fail($key, "The {$key} argument is invalid.");

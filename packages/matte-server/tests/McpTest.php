@@ -201,6 +201,10 @@ it('rejects representative malformed and unknown arguments through HTTP', functi
     'malformed job id' => ['job_status', ['job_id' => 42]],
     'unknown recent jobs key' => ['recent_jobs', ['owner_id' => fake()->uuid()]],
     'impossible calendar date' => ['recent_jobs', ['created_from' => '2026-02-30T12:00:00Z']],
+    'null status' => ['recent_jobs', ['status' => null]],
+    'null created from' => ['recent_jobs', ['created_from' => null]],
+    'null created to' => ['recent_jobs', ['created_to' => null]],
+    'null cursor' => ['recent_jobs', ['cursor' => null]],
 ]);
 
 it('returns stable failure metadata through both HTTP tools without selecting or relaying diagnostics', function (): void {
@@ -272,6 +276,7 @@ it('normalizes equivalent RFC 3339 offsets to UTC filter boundaries', function (
     $after = MatteJob::factory()->create(['created_at' => '2026-09-30 12:00:01', 'updated_at' => '2026-09-30 12:00:01']);
     $equivalentInstants = [
         'Z' => '2026-09-30T12:00:00Z',
+        'Z zero fraction' => '2026-09-30T12:00:00.000000Z',
         'positive offset' => '2026-09-30T14:00:00+02:00',
         'negative offset' => '2026-09-30T08:00:00-04:00',
     ];
@@ -285,6 +290,28 @@ it('normalizes equivalent RFC 3339 offsets to UTC filter boundaries', function (
 
         expect(array_column($from->json('result.structuredContent.jobs'), 'id'))->toBe([$after->id, $boundary->id])
             ->and(array_column($to->json('result.structuredContent.jobs'), 'id'))->toBe([$boundary->id, $before->id]);
+    }
+});
+
+it('preserves fractional RFC 3339 filter boundaries across equivalent offsets', function (): void {
+    $before = MatteJob::factory()->create(['created_at' => '2026-09-30 11:59:59', 'updated_at' => '2026-09-30 11:59:59']);
+    $boundarySecond = MatteJob::factory()->create(['created_at' => '2026-09-30 12:00:00', 'updated_at' => '2026-09-30 12:00:00']);
+    $after = MatteJob::factory()->create(['created_at' => '2026-09-30 12:00:01', 'updated_at' => '2026-09-30 12:00:01']);
+    $equivalentInstants = [
+        'Z' => '2026-09-30T12:00:00.500000Z',
+        'positive offset' => '2026-09-30T14:00:00.500000+02:00',
+        'negative offset' => '2026-09-30T08:00:00.500000-04:00',
+    ];
+
+    foreach ($equivalentInstants as $instant) {
+        $from = matteMcpPost(matteCallPayload('recent_jobs', ['created_from' => $instant, 'limit' => 100]));
+        $to = matteMcpPost(matteCallPayload('recent_jobs', ['created_to' => $instant, 'limit' => 100]));
+
+        $from->assertOk();
+        $to->assertOk();
+
+        expect(array_column($from->json('result.structuredContent.jobs'), 'id'))->toBe([$after->id])
+            ->and(array_column($to->json('result.structuredContent.jobs'), 'id'))->toBe([$boundarySecond->id, $before->id]);
     }
 });
 

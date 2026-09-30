@@ -181,7 +181,10 @@ final class RecentJobsTool extends Tool
             McpInput::fail($key, "The {$key} argument is invalid.");
         }
 
-        return (string) (new MatteJob)->fromDateTime($timestamp->utc());
+        $timestamp = $timestamp->utc();
+        $format = $timestamp->format('u') === '000000' ? 'Y-m-d H:i:s' : 'Y-m-d H:i:s.u';
+
+        return $timestamp->format($format);
     }
 
     private function cursor(string $scope, MatteJob $job): string
