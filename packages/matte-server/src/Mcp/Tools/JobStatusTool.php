@@ -11,6 +11,7 @@ use ArtisanBuild\BuiltForCloud\Mcp\Effect;
 use ArtisanBuild\BuiltForCloud\Mcp\RespectsEffectCeiling;
 use ArtisanBuild\BuiltForCloud\Mcp\ToolClassification;
 use ArtisanBuild\BuiltForCloud\Mcp\ToolEffect;
+use ArtisanBuild\MatteContracts\JobStatus;
 use ArtisanBuild\MatteServer\MatteJob;
 use ArtisanBuild\MatteServer\Mcp\Support\McpInput;
 use ArtisanBuild\MatteServer\Mcp\Support\McpResponse;
@@ -65,7 +66,7 @@ final class JobStatusTool extends Tool
         }
 
         $job = MatteJob::query()
-            ->select(['id', 'status', 'error', 'created_at', 'updated_at'])
+            ->select(['id', 'status', 'created_at', 'updated_at'])
             ->find($jobId);
 
         if (! $job instanceof MatteJob) {
@@ -85,7 +86,7 @@ final class JobStatusTool extends Tool
         return [
             'id' => $job->id,
             'status' => $job->status->value,
-            'error' => $job->error,
+            'error' => $job->status === JobStatus::Failed ? 'job_failed' : null,
             'created_at' => $job->created_at->toISOString(),
             'updated_at' => $job->updated_at->toISOString(),
         ];

@@ -178,32 +178,6 @@ it('guards the product MCP endpoint with the exact read door and refuses a cross
         matteCallPayload('recent_jobs', []),
         matteMcpAssertion('cross-scope-member', 'https://another-installation.test'),
     )->assertUnauthorized()->assertExactJson(['message' => 'Unauthenticated.']);
-
-    $errorMarker = 'oversized-private-error';
-    $oversized = MatteJob::factory()->failed()->create([
-        'error' => str_repeat($errorMarker, 50_000),
-        'input_ref' => 'data:image/png;base64,'.base64_encode("\x89PNG\r\n\x1a\nprivate-input"),
-        'output_ref' => 'https://storage.example.test/private-output.png',
-    ]);
-    $maximumId = str_repeat('x', AuthenticateMcp::MAX_JSON_RPC_ID_BYTES - 2);
-
-    expect(strlen(json_encode($maximumId, JSON_THROW_ON_ERROR)))
-        ->toBe(AuthenticateMcp::MAX_JSON_RPC_ID_BYTES);
-
-    $bounded = matteMcpPost(matteCallPayload('recent_jobs', [], $maximumId));
-
-    $bounded->assertOk()
-        ->assertJsonPath('id', $maximumId)
-        ->assertJsonPath('result.structuredContent.error', 'job_row_exceeds_relay_limit');
-
-    expect(strlen((string) $bounded->getContent()))->toBeLessThan(McpResponse::RELAY_BODY_CAP_BYTES)
-        ->and((string) $bounded->getContent())->not->toContain(
-            $errorMarker,
-            'data:image/png',
-            'storage.example.test',
-            'input_ref',
-            'output_ref',
-        );
 });
 
 it('rejects numeric unknown and odd-shaped tool input at runtime', function (string $tool, array $arguments): void {
@@ -218,14 +192,33 @@ it('rejects numeric unknown and odd-shaped tool input at runtime', function (str
     'unknown recent jobs key' => [RecentJobsTool::class, ['owner_id' => fake()->uuid()]],
 ]);
 
-it('returns bounded job metadata while selecting and exposing no storage references', function (): void {
+it('rejects representative malformed and unknown arguments through HTTP', function (string $tool, array $arguments): void {
+    $response = matteMcpPost(matteCallPayload($tool, $arguments));
+
+    $response->assertOk();
+    expect($response->json('result.isError'))->toBeTrue((string) $response->getContent());
+})->with([
+    'malformed job id' => ['job_status', ['job_id' => 42]],
+    'unknown recent jobs key' => ['recent_jobs', ['owner_id' => fake()->uuid()]],
+    'impossible calendar date' => ['recent_jobs', ['created_from' => '2026-02-30T12:00:00Z']],
+]);
+
+it('returns stable failure metadata through both HTTP tools without selecting or relaying diagnostics', function (): void {
     $binaryMarker = base64_encode("\x89PNG\r\n\x1a\nprivate-image");
     $inputMarker = 'data:image/png;base64,'.$binaryMarker;
     $outputMarker = 'https://storage.example.test/outputs/secret-result.png';
+    $errorMarker = 'private-diagnostic-marker';
     $job = MatteJob::factory()->failed()->create([
         'input_ref' => $inputMarker,
         'output_ref' => $outputMarker,
-        'error' => 'conversion failed',
+        'error' => implode(' ', [
+            $errorMarker,
+            '/private/runtime/models/isnet.onnx',
+            's3://private-bucket/output.png',
+            $outputMarker,
+            $inputMarker,
+            str_repeat($binaryMarker, 50_000),
+        ]),
     ]);
     $queries = [];
     DB::listen(function (QueryExecuted $query) use (&$queries): void {
@@ -233,17 +226,66 @@ it('returns bounded job metadata while selecting and exposing no storage referen
             $queries[] = $query->sql;
         }
     });
+    $maximumId = str_repeat('x', AuthenticateMcp::MAX_JSON_RPC_ID_BYTES - 2);
 
-    $result = matteToolResult(JobStatusTool::class, ['job_id' => $job->id]);
-    $encoded = json_encode($result, JSON_THROW_ON_ERROR);
+    expect(strlen(json_encode($maximumId, JSON_THROW_ON_ERROR)))
+        ->toBe(AuthenticateMcp::MAX_JSON_RPC_ID_BYTES);
 
-    expect($result)->toHaveKey('job.id', $job->id)
-        ->and($result)->toHaveKey('job.status', JobStatus::Failed->value)
-        ->and($result)->toHaveKey('job.error', 'conversion failed')
-        ->and($encoded)->not->toContain($inputMarker, $outputMarker, $binaryMarker, 'input_ref', 'output_ref')
-        ->and($queries)->toHaveCount(1)
-        ->and($queries[0])->toContain('"id"', '"status"', '"error"', '"created_at"', '"updated_at"')
-        ->and($queries[0])->not->toContain('input_ref', 'output_ref');
+    $status = matteMcpPost(matteCallPayload('job_status', ['job_id' => $job->id], $maximumId));
+    $recent = matteMcpPost(matteCallPayload('recent_jobs', [], $maximumId));
+
+    $status->assertOk()
+        ->assertJsonPath('id', $maximumId)
+        ->assertJsonPath('result.structuredContent.job.id', $job->id)
+        ->assertJsonPath('result.structuredContent.job.status', JobStatus::Failed->value)
+        ->assertJsonPath('result.structuredContent.job.error', 'job_failed');
+    $recent->assertOk()
+        ->assertJsonPath('id', $maximumId)
+        ->assertJsonPath('result.structuredContent.jobs.0.id', $job->id)
+        ->assertJsonPath('result.structuredContent.jobs.0.error', 'job_failed');
+
+    foreach ([$status, $recent] as $response) {
+        expect(strlen((string) $response->getContent()))->toBeLessThan(McpResponse::RELAY_BODY_CAP_BYTES)
+            ->and((string) $response->getContent())->not->toContain(
+                $errorMarker,
+                '/private/runtime',
+                's3://private-bucket',
+                'storage.example.test',
+                'data:image/png',
+                $binaryMarker,
+                'input_ref',
+                'output_ref',
+            );
+    }
+
+    expect($queries)->toHaveCount(2);
+
+    foreach ($queries as $query) {
+        expect($query)->toContain('"id"', '"status"', '"created_at"', '"updated_at"')
+            ->and($query)->not->toContain('"error"', 'input_ref', 'output_ref');
+    }
+});
+
+it('normalizes equivalent RFC 3339 offsets to UTC filter boundaries', function (): void {
+    $before = MatteJob::factory()->create(['created_at' => '2026-09-30 11:59:59', 'updated_at' => '2026-09-30 11:59:59']);
+    $boundary = MatteJob::factory()->create(['created_at' => '2026-09-30 12:00:00', 'updated_at' => '2026-09-30 12:00:00']);
+    $after = MatteJob::factory()->create(['created_at' => '2026-09-30 12:00:01', 'updated_at' => '2026-09-30 12:00:01']);
+    $equivalentInstants = [
+        'Z' => '2026-09-30T12:00:00Z',
+        'positive offset' => '2026-09-30T14:00:00+02:00',
+        'negative offset' => '2026-09-30T08:00:00-04:00',
+    ];
+
+    foreach ($equivalentInstants as $instant) {
+        $from = matteMcpPost(matteCallPayload('recent_jobs', ['created_from' => $instant, 'limit' => 100]));
+        $to = matteMcpPost(matteCallPayload('recent_jobs', ['created_to' => $instant, 'limit' => 100]));
+
+        $from->assertOk();
+        $to->assertOk();
+
+        expect(array_column($from->json('result.structuredContent.jobs'), 'id'))->toBe([$after->id, $boundary->id])
+            ->and(array_column($to->json('result.structuredContent.jobs'), 'id'))->toBe([$boundary->id, $before->id]);
+    }
 });
 
 it('binds opaque cursors to filters and rejects tampering', function (): void {
@@ -274,7 +316,7 @@ it('binds opaque cursors to filters and rejects tampering', function (): void {
     ]))->toThrow(ValidationException::class);
 });
 
-it('paginates more than one hundred same-time jobs without duplicates or omissions', function (): void {
+it('paginates the maximum successful pages through HTTP below the relay cap', function (): void {
     $createdAt = CarbonImmutable::parse('2026-09-30T12:00:00Z');
     MatteJob::factory()->count(205)->create([
         'created_at' => $createdAt,
@@ -283,6 +325,8 @@ it('paginates more than one hundred same-time jobs without duplicates or omissio
     $expected = MatteJob::query()->orderByDesc('created_at')->orderByDesc('id')->pluck('id')->all();
     $actual = [];
     $cursor = null;
+    $pageSizes = [];
+    $maximumId = str_repeat('x', AuthenticateMcp::MAX_JSON_RPC_ID_BYTES - 2);
 
     do {
         $arguments = ['limit' => 100];
@@ -291,12 +335,19 @@ it('paginates more than one hundred same-time jobs without duplicates or omissio
             $arguments['cursor'] = $cursor;
         }
 
-        $page = matteToolResult(RecentJobsTool::class, $arguments);
+        $response = matteMcpPost(matteCallPayload('recent_jobs', $arguments, $maximumId));
+        $response->assertOk()->assertJsonPath('id', $maximumId);
+
+        expect(strlen((string) $response->getContent()))->toBeLessThan(McpResponse::RELAY_BODY_CAP_BYTES);
+
+        $page = $response->json('result.structuredContent');
         $actual = [...$actual, ...array_column($page['jobs'], 'id')];
+        $pageSizes[] = count($page['jobs']);
         $cursor = $page['next_cursor'];
     } while ($cursor !== null);
 
     expect($actual)->toBe($expected)
         ->and($actual)->toHaveCount(205)
-        ->and(array_values(array_unique($actual)))->toHaveCount(205);
+        ->and(array_values(array_unique($actual)))->toHaveCount(205)
+        ->and($pageSizes)->toBe([100, 100, 5]);
 });

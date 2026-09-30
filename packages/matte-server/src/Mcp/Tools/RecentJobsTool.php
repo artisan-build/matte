@@ -72,7 +72,7 @@ final class RecentJobsTool extends Tool
         $filters = $this->filters($request);
         $scope = hash('sha256', json_encode($filters, JSON_THROW_ON_ERROR));
         $cursor = OpaqueCursor::decode(McpInput::optionalString($request, 'cursor', 2048), 'recent_jobs', $scope);
-        $query = MatteJob::query()->select(['id', 'status', 'error', 'created_at', 'updated_at']);
+        $query = MatteJob::query()->select(['id', 'status', 'created_at', 'updated_at']);
 
         if ($filters['status'] !== null) {
             $query->where('status', $filters['status']);
@@ -157,17 +157,31 @@ final class RecentJobsTool extends Tool
             return null;
         }
 
-        if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/D', $value) !== 1) {
+        if (preg_match(
+            '/^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})T(?<time>\d{2}:\d{2}:\d{2})(?<fraction>\.\d{1,6})?(?<offset>Z|[+-](?<offset_hour>\d{2}):(?<offset_minute>\d{2}))$/D',
+            $value,
+            $parts,
+        ) !== 1) {
+            McpInput::fail($key, "The {$key} argument is invalid.");
+        }
+
+        [$hour, $minute, $second] = array_map('intval', explode(':', $parts['time']));
+
+        if (! checkdate((int) $parts['month'], (int) $parts['day'], (int) $parts['year'])
+            || $hour > 23 || $minute > 59 || $second > 59
+            || ($parts['offset'] !== 'Z'
+                && ((int) $parts['offset_hour'] > 23 || (int) $parts['offset_minute'] > 59))) {
             McpInput::fail($key, "The {$key} argument is invalid.");
         }
 
         try {
-            $timestamp = CarbonImmutable::parse($value);
+            $format = $parts['fraction'] === '' ? '!Y-m-d\TH:i:sP' : '!Y-m-d\TH:i:s.uP';
+            $timestamp = CarbonImmutable::createFromFormat($format, $value);
         } catch (Throwable) {
             McpInput::fail($key, "The {$key} argument is invalid.");
         }
 
-        return (string) (new MatteJob)->fromDateTime($timestamp);
+        return (string) (new MatteJob)->fromDateTime($timestamp->utc());
     }
 
     private function cursor(string $scope, MatteJob $job): string
