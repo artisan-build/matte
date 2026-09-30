@@ -24667,12 +24667,13 @@ namespace Laravel\Mcp\Facades {
         /**
          * @param \Closure(string, TokenSet):  mixed|array{0: class-string, 1: string}  $handler
          * @param array<int, string>|string $middleware
+         * @param array<string, mixed> $clientMetadata
          * @static
          */
-        public static function oAuthRoutesFor($client, $handler, $middleware = 'web', $connectUri = null, $callbackUri = null)
+        public static function oAuthRoutesFor($client, $handler, $middleware = 'web', $connectUri = null, $callbackUri = null, $clientMetadataUri = null, $clientMetadata = [])
         {
             /** @var \Laravel\Mcp\Server\Registrar $instance */
-            return $instance->oAuthRoutesFor($client, $handler, $middleware, $connectUri, $callbackUri);
+            return $instance->oAuthRoutesFor($client, $handler, $middleware, $connectUri, $callbackUri, $clientMetadataUri, $clientMetadata);
         }
 
         /**
