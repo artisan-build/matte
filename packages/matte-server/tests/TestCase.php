@@ -11,6 +11,7 @@ use ArtisanBuild\BuiltForCloud\Testing\WithCredentials;
 use ArtisanBuild\BuiltForCloud\User;
 use ArtisanBuild\MatteServer\MatteServerServiceProvider;
 use Illuminate\Foundation\Application;
+use Laravel\Mcp\Server\McpServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
@@ -27,7 +28,7 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
-        return [BuiltForCloudServiceProvider::class, MatteServerServiceProvider::class];
+        return [McpServiceProvider::class, BuiltForCloudServiceProvider::class, MatteServerServiceProvider::class];
     }
 
     /**
