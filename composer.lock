@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fb189df5527b20cbde517fd9fff56597",
+    "content-hash": "53c8cef427e3d0e80ff2b08e4b74056b",
     "packages": [
         {
             "name": "artisan-build/bfc-client",
@@ -67,16 +67,16 @@
         },
         {
             "name": "artisan-build/built-for-cloud",
-            "version": "v0.19.6",
+            "version": "v0.19.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/built-for-cloud.git",
-                "reference": "2f29b9b37fa01953f625e3360ea7b52edf0aff09"
+                "reference": "d21f1a24c8298b439b75a2c7c214cf39a43f3253"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/2f29b9b37fa01953f625e3360ea7b52edf0aff09",
-                "reference": "2f29b9b37fa01953f625e3360ea7b52edf0aff09",
+                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/d21f1a24c8298b439b75a2c7c214cf39a43f3253",
+                "reference": "d21f1a24c8298b439b75a2c7c214cf39a43f3253",
                 "shasum": ""
             },
             "require": {
@@ -135,9 +135,9 @@
             ],
             "support": {
                 "issues": "https://github.com/artisan-build/built-for-cloud/issues",
-                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.19.6"
+                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.19.7"
             },
-            "time": "2026-09-30T11:11:35+00:00"
+            "time": "2026-10-01T06:54:45+00:00"
         },
         {
             "name": "artisan-build/built-for-cloud-contracts",
@@ -342,10 +342,10 @@
             "dist": {
                 "type": "path",
                 "url": "packages/matte-server",
-                "reference": "5c4c65bfb62e0af477f31199052dde3eb1449e59"
+                "reference": "1028cc344584a80bf1c38f8b422512898b10fd78"
             },
             "require": {
-                "artisan-build/built-for-cloud": "^0.19.6",
+                "artisan-build/built-for-cloud": "^0.19.7",
                 "artisan-build/matte-contracts": "^2.0",
                 "illuminate/contracts": "^13.0",
                 "illuminate/support": "^13.0",
@@ -996,16 +996,16 @@
         },
         {
             "name": "doctrine/lexer",
-            "version": "3.0.2",
+            "version": "3.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/lexer.git",
-                "reference": "e96fe45e92a54233726014a7cc7340abf29bb14c"
+                "reference": "71d305eaa6480d3d3460c7d053d1da7749fa9cca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/lexer/zipball/e96fe45e92a54233726014a7cc7340abf29bb14c",
-                "reference": "e96fe45e92a54233726014a7cc7340abf29bb14c",
+                "url": "https://api.github.com/repos/doctrine/lexer/zipball/71d305eaa6480d3d3460c7d053d1da7749fa9cca",
+                "reference": "71d305eaa6480d3d3460c7d053d1da7749fa9cca",
                 "shasum": ""
             },
             "require": {
@@ -1051,7 +1051,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/lexer/issues",
-                "source": "https://github.com/doctrine/lexer/tree/3.0.2"
+                "source": "https://github.com/doctrine/lexer/tree/3.0.3"
             },
             "funding": [
                 {
@@ -1067,7 +1067,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-06-14T20:44:06+00:00"
+            "time": "2026-10-01T06:59:29+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",
