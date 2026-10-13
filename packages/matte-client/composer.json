@@ -6,7 +6,7 @@
     "type": "library",
     "version": "2.1.0",
     "require": {
-        "artisan-build/bfc-client": "^0.1",
+        "artisan-build/bfc-client": "^0.1 || ^0.2",
         "artisan-build/built-for-cloud": "^0.19.8",
         "artisan-build/matte-contracts": "^2.0",
         "guzzlehttp/guzzle": "^7.8",
