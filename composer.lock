@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "839591dcdf4a970abfb12d03e21232a5",
+    "content-hash": "7bfe3a660d00f812970aa97e6343cc3f",
     "packages": [
         {
             "name": "artisan-build/bfc-client",
@@ -68,16 +68,16 @@
         },
         {
             "name": "artisan-build/built-for-cloud",
-            "version": "v0.19.8",
+            "version": "v0.19.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/built-for-cloud.git",
-                "reference": "91e0239d8ee2c3553f64497b853c16b5bdbc8583"
+                "reference": "e40e6dd2d9e4d0ce72be0d3dfc2c989240298dea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/91e0239d8ee2c3553f64497b853c16b5bdbc8583",
-                "reference": "91e0239d8ee2c3553f64497b853c16b5bdbc8583",
+                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/e40e6dd2d9e4d0ce72be0d3dfc2c989240298dea",
+                "reference": "e40e6dd2d9e4d0ce72be0d3dfc2c989240298dea",
                 "shasum": ""
             },
             "require": {
@@ -136,9 +136,9 @@
             ],
             "support": {
                 "issues": "https://github.com/artisan-build/built-for-cloud/issues",
-                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.19.8"
+                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.19.10"
             },
-            "time": "2026-10-01T11:52:18+00:00"
+            "time": "2026-10-12T14:17:10+00:00"
         },
         {
             "name": "artisan-build/built-for-cloud-contracts",
@@ -343,10 +343,10 @@
             "dist": {
                 "type": "path",
                 "url": "packages/matte-server",
-                "reference": "4c5cb9790b5ceb600bd766159d2c71b87f600a82"
+                "reference": "043d0a3f29a76f2693eee1da2c80989dd37e7d7c"
             },
             "require": {
-                "artisan-build/built-for-cloud": "^0.19.8",
+                "artisan-build/built-for-cloud": "^0.19.10",
                 "artisan-build/matte-contracts": "^2.0",
                 "illuminate/contracts": "^13.0",
                 "illuminate/support": "^13.0",
@@ -688,16 +688,16 @@
         },
         {
             "name": "composer/semver",
-            "version": "3.5.0",
+            "version": "3.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/semver.git",
-                "reference": "f7a296f4c4cf8cb8bb83e35d6951a406bb11afa5"
+                "reference": "528948210cc46f967a4b98e83b19e76f2b504993"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/semver/zipball/f7a296f4c4cf8cb8bb83e35d6951a406bb11afa5",
-                "reference": "f7a296f4c4cf8cb8bb83e35d6951a406bb11afa5",
+                "url": "https://api.github.com/repos/composer/semver/zipball/528948210cc46f967a4b98e83b19e76f2b504993",
+                "reference": "528948210cc46f967a4b98e83b19e76f2b504993",
                 "shasum": ""
             },
             "require": {
@@ -749,7 +749,7 @@
             "support": {
                 "irc": "ircs://irc.libera.chat:6697/composer",
                 "issues": "https://github.com/composer/semver/issues",
-                "source": "https://github.com/composer/semver/tree/3.5.0"
+                "source": "https://github.com/composer/semver/tree/3.5.1"
             },
             "funding": [
                 {
@@ -761,7 +761,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-09-24T14:38:51+00:00"
+            "time": "2026-10-05T13:12:12+00:00"
         },
         {
             "name": "defuse/php-encryption",
