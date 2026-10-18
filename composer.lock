@@ -4,29 +4,31 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7bfe3a660d00f812970aa97e6343cc3f",
+    "content-hash": "c2d10100a15df07029165ecfe798b567",
     "packages": [
         {
             "name": "artisan-build/bfc-client",
-            "version": "v0.2.0",
+            "version": "v0.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/bfc-client.git",
-                "reference": "f5eb42296bbdad594d00bd4919fe8c11deac0c2e"
+                "reference": "72a52df5a716493de89ea431d46dbfd9fdf33ce8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/bfc-client/zipball/f5eb42296bbdad594d00bd4919fe8c11deac0c2e",
-                "reference": "f5eb42296bbdad594d00bd4919fe8c11deac0c2e",
+                "url": "https://api.github.com/repos/artisan-build/bfc-client/zipball/72a52df5a716493de89ea431d46dbfd9fdf33ce8",
+                "reference": "72a52df5a716493de89ea431d46dbfd9fdf33ce8",
                 "shasum": ""
             },
             "require": {
-                "illuminate/cache": "^13.0",
-                "illuminate/contracts": "^13.0",
-                "illuminate/filesystem": "^13.0",
-                "illuminate/http": "^13.0",
-                "illuminate/routing": "^13.0",
-                "illuminate/support": "^13.0",
+                "illuminate/cache": "^11.17 || ^12.0 || ^13.0",
+                "illuminate/contracts": "^11.17 || ^12.0 || ^13.0",
+                "illuminate/database": "^11.17 || ^12.0 || ^13.0",
+                "illuminate/encryption": "^11.17 || ^12.0 || ^13.0",
+                "illuminate/filesystem": "^11.17 || ^12.0 || ^13.0",
+                "illuminate/http": "^11.17 || ^12.0 || ^13.0",
+                "illuminate/routing": "^11.17 || ^12.0 || ^13.0",
+                "illuminate/support": "^11.17 || ^12.0 || ^13.0",
                 "php": "^8.3"
             },
             "require-dev": {
@@ -62,26 +64,27 @@
             ],
             "support": {
                 "issues": "https://github.com/artisan-build/bfc-client/issues",
-                "source": "https://github.com/artisan-build/bfc-client/tree/v0.2.0"
+                "source": "https://github.com/artisan-build/bfc-client/tree/v0.2.2"
             },
-            "time": "2026-09-15T14:43:18+00:00"
+            "time": "2026-10-13T13:23:58+00:00"
         },
         {
             "name": "artisan-build/built-for-cloud",
-            "version": "v0.19.10",
+            "version": "v0.19.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/built-for-cloud.git",
-                "reference": "e40e6dd2d9e4d0ce72be0d3dfc2c989240298dea"
+                "reference": "86aae7b254f4ac99096f02f1dc793aaed1c194cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/e40e6dd2d9e4d0ce72be0d3dfc2c989240298dea",
-                "reference": "e40e6dd2d9e4d0ce72be0d3dfc2c989240298dea",
+                "url": "https://api.github.com/repos/artisan-build/built-for-cloud/zipball/86aae7b254f4ac99096f02f1dc793aaed1c194cf",
+                "reference": "86aae7b254f4ac99096f02f1dc793aaed1c194cf",
                 "shasum": ""
             },
             "require": {
-                "artisan-build/built-for-cloud-contracts": "^0.4",
+                "artisan-build/bfc-client": "^0.2.2",
+                "artisan-build/built-for-cloud-contracts": "^0.4.1",
                 "composer/semver": "^3.4",
                 "illuminate/auth": "^13.24",
                 "illuminate/console": "^13.24",
@@ -119,6 +122,9 @@
                 }
             },
             "autoload": {
+                "files": [
+                    "src/compatibility-aliases.php"
+                ],
                 "psr-4": {
                     "ArtisanBuild\\BuiltForCloud\\": "src/"
                 }
@@ -136,22 +142,22 @@
             ],
             "support": {
                 "issues": "https://github.com/artisan-build/built-for-cloud/issues",
-                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.19.10"
+                "source": "https://github.com/artisan-build/built-for-cloud/tree/v0.19.12"
             },
-            "time": "2026-10-12T14:17:10+00:00"
+            "time": "2026-10-17T21:47:58+00:00"
         },
         {
             "name": "artisan-build/built-for-cloud-contracts",
-            "version": "v0.4.0",
+            "version": "v0.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/built-for-cloud-contracts.git",
-                "reference": "2206024671444388a2db018bc392a33c14720b91"
+                "reference": "dd6cb48eb12f2752ee7856bd5913f62f24b7f80d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/built-for-cloud-contracts/zipball/2206024671444388a2db018bc392a33c14720b91",
-                "reference": "2206024671444388a2db018bc392a33c14720b91",
+                "url": "https://api.github.com/repos/artisan-build/built-for-cloud-contracts/zipball/dd6cb48eb12f2752ee7856bd5913f62f24b7f80d",
+                "reference": "dd6cb48eb12f2752ee7856bd5913f62f24b7f80d",
                 "shasum": ""
             },
             "require": {
@@ -181,9 +187,9 @@
             ],
             "support": {
                 "issues": "https://github.com/artisan-build/built-for-cloud-contracts/issues",
-                "source": "https://github.com/artisan-build/built-for-cloud-contracts/tree/v0.4.0"
+                "source": "https://github.com/artisan-build/built-for-cloud-contracts/tree/v0.4.1"
             },
-            "time": "2026-09-30T09:01:41+00:00"
+            "time": "2026-10-16T20:09:41+00:00"
         },
         {
             "name": "artisan-build/hone-client",
@@ -343,10 +349,10 @@
             "dist": {
                 "type": "path",
                 "url": "packages/matte-server",
-                "reference": "043d0a3f29a76f2693eee1da2c80989dd37e7d7c"
+                "reference": "79d6ce893bb84ef036a7726b6cce00178e4247a2"
             },
             "require": {
-                "artisan-build/built-for-cloud": "^0.19.10",
+                "artisan-build/built-for-cloud": "^0.19.12",
                 "artisan-build/matte-contracts": "^2.0",
                 "illuminate/contracts": "^13.0",
                 "illuminate/support": "^13.0",
