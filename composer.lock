@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "41387c4c6436294e442175925bc64617",
+    "content-hash": "c4e5802b6abbf57be3bbe43ab9b0d153",
     "packages": [
         {
             "name": "artisan-build/bfc-client",
@@ -193,16 +193,16 @@
         },
         {
             "name": "artisan-build/hone-client",
-            "version": "v1.8.1",
+            "version": "v1.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/hone-client.git",
-                "reference": "fbde4a125ebefdac2c4a862520a4e61d6105d391"
+                "reference": "e6fbd0d741fc7f75336a621d83e005109e6c9a04"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/hone-client/zipball/fbde4a125ebefdac2c4a862520a4e61d6105d391",
-                "reference": "fbde4a125ebefdac2c4a862520a4e61d6105d391",
+                "url": "https://api.github.com/repos/artisan-build/hone-client/zipball/e6fbd0d741fc7f75336a621d83e005109e6c9a04",
+                "reference": "e6fbd0d741fc7f75336a621d83e005109e6c9a04",
                 "shasum": ""
             },
             "require": {
@@ -250,22 +250,22 @@
                 "telemetry"
             ],
             "support": {
-                "source": "https://github.com/artisan-build/hone-client/tree/v1.8.1"
+                "source": "https://github.com/artisan-build/hone-client/tree/v1.8.2"
             },
-            "time": "2026-10-20T09:51:06+00:00"
+            "time": "2026-10-23T17:19:59+00:00"
         },
         {
             "name": "artisan-build/hone-contracts",
-            "version": "v1.8.1",
+            "version": "v1.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artisan-build/hone-contracts.git",
-                "reference": "6de5564eb60b19d0a4803a9b05a71e9b6a3cb010"
+                "reference": "987f43ae42cf8ffb40b587f644f8d06b350c2432"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artisan-build/hone-contracts/zipball/6de5564eb60b19d0a4803a9b05a71e9b6a3cb010",
-                "reference": "6de5564eb60b19d0a4803a9b05a71e9b6a3cb010",
+                "url": "https://api.github.com/repos/artisan-build/hone-contracts/zipball/987f43ae42cf8ffb40b587f644f8d06b350c2432",
+                "reference": "987f43ae42cf8ffb40b587f644f8d06b350c2432",
                 "shasum": ""
             },
             "require": {
@@ -294,9 +294,9 @@
                 "telemetry"
             ],
             "support": {
-                "source": "https://github.com/artisan-build/hone-contracts/tree/v1.8.1"
+                "source": "https://github.com/artisan-build/hone-contracts/tree/v1.8.2"
             },
-            "time": "2026-10-20T09:51:13+00:00"
+            "time": "2026-10-23T17:20:03+00:00"
         },
         {
             "name": "artisan-build/matte-contracts",

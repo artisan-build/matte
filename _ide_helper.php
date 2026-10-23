@@ -24707,10 +24707,10 @@ namespace Laravel\Mcp\Facades {
         /**
          * @static
          */
-        public static function oauthRoutes($oauthPrefix = 'oauth')
+        public static function oauthRoutes($oauthPrefix = 'oauth', $registration = true)
         {
             /** @var \Laravel\Mcp\Server\Registrar $instance */
-            return $instance->oauthRoutes($oauthPrefix);
+            return $instance->oauthRoutes($oauthPrefix, $registration);
         }
 
         /**
