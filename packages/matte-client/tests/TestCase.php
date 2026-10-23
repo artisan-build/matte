@@ -19,7 +19,7 @@ abstract class TestCase extends Orchestra
      */
     protected function getPackageProviders($app): array
     {
-        return [BuiltForCloudServiceProvider::class, BfcClientServiceProvider::class, MatteClientServiceProvider::class];
+        return [BfcClientServiceProvider::class, BuiltForCloudServiceProvider::class, MatteClientServiceProvider::class];
     }
 
     /**
