@@ -30,4 +30,19 @@ return [
         'managed_transitions' => false,
         'credential_purposes' => ['matte.remove', 'matte.callback'],
     ],
+
+    'dashboard_prompts' => [
+        [
+            'title' => 'How is Matte doing?',
+            'ask' => 'List the most recent background-removal jobs, how many succeeded or failed, and how long they took.',
+        ],
+        [
+            'title' => 'Why did a job fail?',
+            'ask' => 'Find the most recent failed job, look up its status, and explain what went wrong and what to try next.',
+        ],
+        [
+            'title' => 'Is anything stuck?',
+            'ask' => 'Look for jobs that have been queued or processing for longer than a few minutes and tell me which ones.',
+        ],
+    ],
 ];
