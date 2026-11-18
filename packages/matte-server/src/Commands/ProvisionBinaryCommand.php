@@ -54,21 +54,7 @@ final class ProvisionBinaryCommand extends Command
         $baseUrl = "https://github.com/artisan-build/bg-remover/releases/download/{$tag}";
         $binaryPath = $locator->binaryPath();
 
-        $checksums = $this->download("{$baseUrl}/checksums.txt");
-        $expectedHash = $this->checksumForAsset($checksums, $asset);
-        $temporaryPath = $binaryPath.'.download';
-
-        $this->downloadTo("{$baseUrl}/{$asset}", $temporaryPath);
-
-        $actualHash = hash_file('sha256', $temporaryPath);
-
-        if ($actualHash !== $expectedHash) {
-            @unlink($temporaryPath);
-
-            throw new RuntimeException("Checksum mismatch for {$asset}.");
-        }
-
-        rename($temporaryPath, $binaryPath);
+        $this->downloadVerified($baseUrl, $asset, $binaryPath);
         chmod($binaryPath, 0755);
 
         return 'downloaded';
@@ -86,13 +72,11 @@ final class ProvisionBinaryCommand extends Command
         }
 
         $version = (string) config('matte-server.onnx_version', '1.19.2');
+        $baseUrl = config('matte-server.onnx_base_url')."/v{$version}";
         $archivePath = $locator->runtimePath().'/'.$onnx['tgz'];
         $extractPath = $locator->runtimePath().'/onnxruntime-extract';
 
-        $this->downloadTo(
-            "https://github.com/microsoft/onnxruntime/releases/download/v{$version}/{$onnx['tgz']}",
-            $archivePath,
-        );
+        $this->downloadVerified($baseUrl, $onnx['tgz'], $archivePath);
 
         $this->removeDirectory($extractPath);
         $this->ensureDirectory($extractPath);
@@ -146,6 +130,25 @@ final class ProvisionBinaryCommand extends Command
         rename($temporaryPath, $modelPath);
 
         return $modelPath.' (downloaded)';
+    }
+
+    private function downloadVerified(string $baseUrl, string $asset, string $path): void
+    {
+        $checksums = $this->download("{$baseUrl}/checksums.txt");
+        $expectedHash = $this->checksumForAsset($checksums, $asset);
+        $temporaryPath = $path.'.download';
+
+        $this->downloadTo("{$baseUrl}/{$asset}", $temporaryPath);
+
+        $actualHash = hash_file('sha256', $temporaryPath);
+
+        if ($actualHash !== $expectedHash) {
+            @unlink($temporaryPath);
+
+            throw new RuntimeException("Checksum mismatch for {$asset}.");
+        }
+
+        rename($temporaryPath, $path);
     }
 
     private function download(string $url): string
