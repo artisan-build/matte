@@ -108,7 +108,7 @@
             "@lint",
             "@stan",
             "@test",
-            "composer audit"
+            "composer audit --abandoned=report"
         ],
         "packages:check": [
             "bash -c 'set -e; for d in packages/*/; do echo \"== ${d} ==\"; (cd \"$d\" && composer install --no-interaction --quiet && composer lint:test && composer test); done'"
@@ -123,7 +123,7 @@
             "@php -r \"echo PHP_EOL . '=== Tests ===' . PHP_EOL;\"",
             "-@php artisan test",
             "@php -r \"echo PHP_EOL . '=== Security Audit ===' . PHP_EOL;\"",
-            "-composer audit"
+            "-composer audit --abandoned=report"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -153,6 +153,9 @@
         }
     },
     "config": {
+        "audit": {
+            "ignore-abandoned": ["symplify/rule-doc-generator-contracts"]
+        },
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
